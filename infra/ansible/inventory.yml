@@ -1,0 +1,384 @@
+all:
+  children:
+#######################################################################
+# EVNFM infra
+    evnfm:
+      children:
+        #jenkins_agents:
+#######################################################################
+#######################################################################
+### Jenkins agents
+#######################################################################
+    jenkins_agents:
+      vars:
+        ansible_port: 22
+        ansible_python_interpreter: '/usr/bin/python2'
+        # ansible_remote_tmp: '/tmp/ansible/tmp'
+      children:
+        jns01:
+        jns02:
+        jns03:
+        jns04:
+        jns05:
+        jns06:
+        jns07:
+        jns08:
+        jns09:
+        jns10:
+        jns11:
+        jns12:
+        jns13:
+        jns14:
+        jns15:
+        jns16:
+        jns17:
+        jns18:
+        jns19:
+        jns20:
+    jns01:
+      hosts:
+        150.132.197.183
+    jns02:
+      hosts:
+        150.132.197.184
+    jns03:
+      hosts:
+        150.132.197.185
+    jns04:
+      hosts:
+        150.132.197.186
+    jns05:
+      hosts:
+        150.132.197.187
+    jns06:
+      hosts:
+        150.132.197.9
+    jns07:
+      hosts:
+        150.132.197.10
+    jns08:
+      hosts:
+        150.132.197.11
+    jns09:
+      hosts:
+        150.132.197.17
+    jns10:
+      hosts:
+        150.132.197.28
+    jns11:
+      hosts:
+        150.132.197.29
+    jns12:
+      hosts:
+        150.132.197.30
+    jns13:
+      hosts:
+        150.132.197.31
+    jns14:
+      hosts:
+        150.132.197.32
+    jns15:
+      hosts:
+        150.132.197.33
+    jns16:
+      hosts:
+        150.132.197.34
+    jns17:
+      hosts:
+        150.132.197.35
+    jns18:
+      hosts:
+        150.132.197.36
+    jns19:
+      hosts:
+        150.132.197.37
+    jns20:
+      hosts:
+        150.132.197.40
+#######################################################################
+#######################################################################
+### Kubernetes nodes
+#######################################################################
+    k8s_nodes:
+      vars:
+        ansible_port: 22
+        ansible_python_interpreter: '/usr/bin/python'
+      children:
+        #hart066:
+        #hart070:
+        #haber002:
+#######################################################################
+#######################################################################
+### Hart066
+#######################################################################
+    hart066:
+      children:
+        # hart066_node01:
+        # hart066_node02:
+        # hart066_node03:
+        # hart066_node04:
+        # hart066_node05:
+        # hart066_node06:
+        # hart066_node07:
+        # hart066_node08:
+        # hart066_node09:
+        # hart066_node10:
+        # hart066_node11:
+        # hart066_node12:
+        # hart066_node13:
+        # hart066_node14:
+        # hart066_node15:
+        # hart066_node16:
+    hart066_node01:
+      hosts:
+        10.158.160.52
+    hart066_node02:
+      hosts:
+        10.158.160.53
+    hart066_node03:
+      hosts:
+        10.158.160.54
+    hart066_node04:
+      hosts:
+        10.158.160.55
+    hart066_node05:
+      hosts:
+        10.158.160.56
+    hart066_node06:
+      hosts:
+        10.158.160.57
+    hart066_node07:
+      hosts:
+        10.158.160.58
+    hart066_node08:
+      hosts:
+        10.158.160.59
+    hart066_node09:
+      hosts:
+        10.158.160.60
+    hart066_node10:
+      hosts:
+        10.158.160.61
+    hart066_node11:
+      hosts:
+        10.158.160.62
+    hart066_node12:
+      hosts:
+        10.158.160.63
+    hart066_node13:
+      hosts:
+        10.158.160.64
+    hart066_node14:
+      hosts:
+        10.158.160.65
+    hart066_node15:
+      hosts:
+        10.158.160.66
+    hart066_node16:
+      hosts:
+        10.158.160.67
+#######################################################################
+#######################################################################
+### Hart070
+#######################################################################
+    hart070:
+      children:
+        # hart070_node01:
+        # hart070_node02:
+        # hart070_node03:
+        # hart070_node04:
+        # hart070_node05:
+        # hart070_node06:
+        # hart070_node07:
+        # hart070_node08:
+        # hart070_node09:
+        # hart070_node10:
+        # hart070_node11:
+        # hart070_node12:
+        # hart070_node13:
+        # hart070_node14:
+        # hart070_node15:
+        # hart070_node16:
+    hart070_node01:
+      hosts:
+        10.158.164.52
+    hart070_node02:
+      hosts:
+        10.158.164.53
+    hart070_node03:
+      hosts:
+        10.158.164.54
+    hart070_node04:
+      hosts:
+        10.158.164.55
+    hart070_node05:
+      hosts:
+        10.158.164.56
+    hart070_node06:
+      hosts:
+        10.158.164.57
+    hart070_node07:
+      hosts:
+        10.158.164.58
+    hart070_node08:
+      hosts:
+        10.158.164.59
+    hart070_node09:
+      hosts:
+        10.158.164.60
+    hart070_node10:
+      hosts:
+        10.158.164.61
+    hart070_node11:
+      hosts:
+        10.158.164.62
+    hart070_node12:
+      hosts:
+        10.158.164.63
+    hart070_node13:
+      hosts:
+        10.158.164.64
+    hart070_node14:
+      hosts:
+        10.158.164.65
+    hart070_node15:
+      hosts:
+        10.158.164.66
+    hart070_node16:
+      hosts:
+        10.158.164.67
+#######################################################################
+#######################################################################
+### Haber002
+#######################################################################
+    haber002:
+      children:
+        # haber002_node01:
+        # haber002_node02:
+        # haber002_node03:
+        # haber002_node04:
+        # haber002_node05:
+        # haber002_node06:
+        # haber002_node07:
+        # haber002_node08:
+        # haber002_node09:
+        # haber002_node10:
+        # haber002_node11:
+        # haber002_node12:
+        # haber002_node13:
+        # haber002_node14:
+        # haber002_node15:
+        # haber002_node16:
+        # haber002_node17:
+        # haber002_node18:
+        # haber002_node19:
+        # haber002_node20:
+        # haber002_node21:
+        # haber002_node22:
+        # haber002_node23:
+        # haber002_node24:
+        # haber002_node25:
+        # haber002_node26:
+        # haber002_node27:
+        # haber002_node28:
+        # haber002_node29:
+        # haber002_node30:
+        # haber002_node31:
+        # haber002_node32:
+    haber002_node01:
+      hosts:
+        10.156.133.36
+    haber002_node02:
+      hosts:
+        10.156.133.37
+    haber002_node03:
+      hosts:
+        10.156.133.38
+    haber002_node04:
+      hosts:
+        10.156.133.39
+    haber002_node05:
+      hosts:
+        10.156.133.40
+    haber002_node06:
+      hosts:
+        10.156.133.41
+    haber002_node07:
+      hosts:
+        10.156.133.42
+    haber002_node08:
+      hosts:
+        10.156.133.43
+    haber002_node09:
+      hosts:
+        10.156.133.44
+    haber002_node10:
+      hosts:
+        10.156.133.45
+    haber002_node11:
+      hosts:
+        10.156.133.46
+    haber002_node12:
+      hosts:
+        10.156.133.47
+    haber002_node13:
+      hosts:
+        10.156.133.48
+    haber002_node14:
+      hosts:
+        10.156.133.49
+    haber002_node15:
+      hosts:
+        10.156.133.50
+    haber002_node16:
+      hosts:
+        10.156.133.51
+    haber002_node17:
+      hosts:
+        10.156.133.52
+    haber002_node18:
+      hosts:
+        10.156.133.53
+    haber002_node19:
+      hosts:
+        10.156.133.54
+    haber002_node20:
+      hosts:
+        10.156.133.55
+    haber002_node21:
+      hosts:
+        10.156.133.56
+    haber002_node22:
+      hosts:
+        10.156.133.57
+    haber002_node23:
+      hosts:
+        10.156.133.58
+    haber002_node24:
+      hosts:
+        10.156.133.59
+    haber002_node25:
+      hosts:
+        10.156.133.60
+    haber002_node26:
+      hosts:
+        10.156.133.61
+    haber002_node27:
+      hosts:
+        10.156.133.62
+    haber002_node28:
+      hosts:
+        10.156.133.63
+    haber002_node29:
+      hosts:
+        10.156.133.64
+    haber002_node30:
+      hosts:
+        10.156.133.65
+    haber002_node31:
+      hosts:
+        10.156.133.66
+    haber002_node32:
+      hosts:
+        10.156.133.67
+#######################################################################

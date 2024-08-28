@@ -1,0 +1,83 @@
+#!/usr/bin/env groovy
+
+@Library('jenkins-shared-libs')
+import static com.ericsson.orchestration.mgmt.libs.VnfmJenkins.getAgentLabel
+import static com.ericsson.orchestration.mgmt.libs.VnfmJenkins.getSeedJobName
+
+
+// Stages template
+def stages = [:]
+// Set Agent label
+String label = getAgentLabel( type: params.SLAVE_LABEL,
+                              this)
+
+
+node(label) {
+    try {
+        // Set Job's ENVs
+        env.SEED_JOB = getSeedJobName(JOB_NAME)
+        env.JOB_TYPE = 'testng'
+        env.GLOBAL_VAR_PATH = 'jenkins/global.var'
+        env.VAR_PATH = 'jenkins/' + env.SEED_JOB + '/project.var'
+        env.GERRIT_BRANCH = 'master'
+        env.HOST_VNFM = params.HOST_VNFM
+        env.HOST_IAM = params.HOST_IAM
+        env.HOST_HELM = params.HOST_HELM
+        env.IDAM_USERNAME = params.IDAM_USERNAME
+        env.IDAM_PASSWORD = params.IDAM_PASSWORD
+        env.CLUSTER = params.CLUSTER
+        env.CISM_CLUSTER = env.CLUSTER == 'hart070' ? 'hart066' : 'hart070'
+        env.NAMESPACE = params.NAMESPACE
+        env.TEST_FLOW = params.TEST_FLOW
+        env.TEST_SUITES_FLOW = params.TEST_SUITES_FLOW
+        env.TEST_THREAD_COUNT = params.TEST_THREAD_COUNT
+        env.AM_INTEGRATION_REFSPEC = params.AM_INTEGRATION_REFSPEC
+
+
+        // Run Prepare Stage
+        stage('Prepare') {
+            println('INFO: Checkout CI code...')
+            checkout(scm)
+
+            println('INFO: Load Global vars...')
+            load(env.GLOBAL_VAR_PATH)
+
+            println('INFO: Load Project vars...')
+            load(env.VAR_PATH)
+
+            println('INFO: Load Stages...')
+            stages['git'] = load(env.GIT_STAGE)
+            stages['k8s'] = load(env.K8S_STAGE)
+            stages['ua-tests'] = load(env.UA_TESTS_STAGE)
+            stages['post'] = load(env.POST_STAGE)
+            stages['clean'] = load(env.CLEAN_STAGE)
+
+        }
+
+        // Run Checkout Project Stage
+        stages['git'].CheckoutProject(project: env.GERRIT_PROJECT,
+                                      branch: env.GERRIT_BRANCH,
+                                      refspec: env.AM_INTEGRATION_REFSPEC,
+                                      type: 'change')
+
+        // Run Registry Debug Stage
+        stages['k8s'].RegistryDebug(cluster: env.CLUSTER,
+                                    namespace: env.NAMESPACE)
+
+        // Run TestNG Tests Stage
+        stages['ua-tests'].TestngTests(env.GERRIT_PROJECT)
+
+        // Run Internal Tests Stage
+        stages['ua-tests'].InternalTests(env.GERRIT_PROJECT)
+
+    } catch (Exception errJob) {
+        println(errJob)
+        currentBuild.result = 'FAILURE'
+    } finally {
+        // Run Post Actions Stage
+        stages['post'].PostTestNG(status: currentBuild.result ?: 'SUCCESS')
+
+        // Run Clean Stage
+        stages['clean'].RunCleanEVNFM()
+    }
+}

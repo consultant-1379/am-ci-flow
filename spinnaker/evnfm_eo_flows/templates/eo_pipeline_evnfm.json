@@ -1,0 +1,145 @@
+{
+    "description": "This pipeline is maintained by spinnaker as a code, any changes made through the ui will be overwritten. Template name: eo_pipeline_evnfm from the repository am-ci-flow in the directory spinnaker/evnfm_eo_flows/templates",
+    "schema": "1",
+    "spelEvaluator": "v4",
+    "parameterConfig": [
+        {
+            "name": "TRIGGER",
+            "default": "Manual Run",
+            "description": "",
+            "hasOptions": false,
+            "pinned": true,
+            "required": false
+        },
+        {
+            "name": "SUBMIT_TO_EO_STAGING",
+            "default": "true",
+            "description": "",
+            "hasOptions": true,
+            "pinned": true,
+            "required": true
+        },
+        {
+            "name": "SKIP_PRE_TESTING",
+            "default": "false",
+            "description": "",
+            "hasOptions": true,
+            "pinned": true,
+            "required": true
+        },
+        {
+            "name": "II_INT_CHART_NAME",
+            "default": "eric-eo-helmfile",
+            "description": "Name of the integration chart which will be used for the Initial install",
+            "hasOptions": false,
+            "pinned": true,
+            "required": true
+        },
+        {
+            "name": "II_INT_CHART_REPO",
+            "default": "https://arm.seli.gic.ericsson.se/artifactory/proj-eo-drop-helm",
+            "description": "Repo of the Integration Chart which will be used for the Initial Install",
+            "hasOptions": false,
+            "pinned": true,
+            "required": true
+        }
+    ],
+    "stages": [
+        {
+            "name": "Evaluate Chart Variables",
+            "refId": "Evaluate Chart Variables",
+            "requisiteStageRefIds": [],
+            "failOnFailedExpressions": true,
+            "type": "evaluateVariables",
+            "variables": [
+                {
+                    "key": "MICROSERVICE_CHART_NAME",
+                    "value": "${trigger['payload']['CHART_NAME']}"
+                },
+                {
+                    "key": "MICROSERVICE_CHART_VERSION",
+                    "value": "${trigger['payload']['CHART_VERSION']}"
+                },
+                {
+                    "key": "MICROSERVICE_CHART_REPO",
+                    "value": "${trigger['payload']['CHART_REPO']}"
+                }
+            ]
+        },
+        {
+            "name": "Evaluate Git Commit Author",
+            "refId": "Evaluate Git Commit Author",
+            "requisiteStageRefIds": [],
+            "failOnFailedExpressions": true,
+            "type": "evaluateVariables",
+            "variables": [
+                {
+                    "key": "GIT_COMMIT_AUTHOR",
+                    "value": "${trigger['payload']['GIT_COMMIT_AUTHOR']?: 'Commit info is missing in release job'}"
+                },
+                {
+                    "key": "GIT_COMMIT_AUTHOR_EMAIL",
+                    "value": "${trigger['payload']['GIT_COMMIT_AUTHOR_EMAIL']?: 'Commit info is missing in release job'}"
+                },
+                {
+                    "key": "GIT_COMMIT_SUMMARY",
+                    "value": "${trigger['payload']['GIT_COMMIT_SUMMARY']?: 'Commit info is missing in release job'}"
+                },
+                {
+                    "key": "GERRIT_CHANGE_URL",
+                    "value": "${trigger['payload']['GERRIT_CHANGE_URL']?: 'Commit info is missing in release job'}"
+                }
+            ]
+        },
+        {
+            "name": "EVNFM_Application_Staging",
+            "refId": "EVNFM_Application_Staging",
+            "requisiteStageRefIds": [
+                "Evaluate Chart Variables",
+                "Evaluate Git Commit Author"
+            ],
+            "completeOtherBranchesThenFail": false,
+            "continuePipeline": false,
+            "failPipeline": true,
+            "waitForCompletion": true,
+            "type": "pipeline",
+            "application": "evnfm-e2e-cicd",
+            "pipeline": "ab22a3f8-c857-4e38-8628-8d6eff8667a8",
+            "pipelineParameters": {
+                "CHART_NAME": "${MICROSERVICE_CHART_NAME}",
+                "CHART_REPO": "${MICROSERVICE_CHART_REPO}",
+                "CHART_VERSION": "${MICROSERVICE_CHART_VERSION}",
+                "II_INT_CHART_NAME": "${parameters['II_INT_CHART_NAME']}",
+                "II_INT_CHART_REPO": "${parameters['II_INT_CHART_REPO']}",
+                "SKIP_PRE_TESTING": "${parameters['SKIP_PRE_TESTING']}",
+                "TRIGGER": "${parameters['TRIGGER']}"
+            }
+        },
+        {
+            "name": "EO_Product_Staging",
+            "refId": "EO_Product_Staging",
+            "requisiteStageRefIds": [
+                "EVNFM_Application_Staging"
+            ],
+            "completeOtherBranchesThenFail": true,
+            "continuePipeline": false,
+            "failPipeline": false,
+            "waitForCompletion": true,
+            "type": "pipeline",
+            "application": "eoapp",
+            "pipeline": "fe9cb49d-cb50-4966-bcf5-2c51dd381399",
+            "pipelineParameters": {
+                "CHART_NAME": "${#stage('EVNFM_Application_Staging')['context']['INT_CHART_NAME']}",
+                "CHART_REPO": "${#stage('EVNFM_Application_Staging')['context']['INT_CHART_REPO']}",
+                "CHART_VERSION": "${#stage('EVNFM_Application_Staging')['context']['INT_CHART_VERSION']}",
+                "MICROSERVICE_CHART_NAME": "${MICROSERVICE_CHART_NAME}",
+                "MICROSERVICE_CHART_REPO": "${MICROSERVICE_CHART_REPO}",
+                "MICROSERVICE_CHART_VERSION": "${MICROSERVICE_CHART_VERSION}"
+            },
+            "stageEnabled": {
+                "expression": "${trigger['parameters']['SUBMIT_TO_EO_STAGING'].toString() == 'true'}",
+                "type": "expression"
+            }
+        },
+    ]
+}

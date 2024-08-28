@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<additionalHeaders>
+  <python_style>
+    <firstLine># ******************************************************************************</firstLine>
+    <beforeEachLine># </beforeEachLine>
+    <endLine># ******************************************************************************</endLine>
+    <skipLine>#!/usr/bin/env python3</skipLine>
+    <firstLineDetectionPattern>(\s|\t)*/\*.*$</firstLineDetectionPattern>
+    <lastLineDetectionPattern>(\s|\t)*/\*.*$</lastLineDetectionPattern>
+    <allowBlankLines>true</allowBlankLines>
+    <isMultiline>true</isMultiline>
+    <padLines>false</padLines>
+  </python_style>
+</additionalHeaders>

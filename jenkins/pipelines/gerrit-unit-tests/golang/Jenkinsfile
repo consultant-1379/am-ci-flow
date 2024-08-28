@@ -1,0 +1,87 @@
+#!/usr/bin/env groovy
+
+@Library('jenkins-shared-libs')
+import static Boolean.parseBoolean
+import static com.ericsson.orchestration.mgmt.libs.VnfmJenkins.getAgentLabel
+import static com.ericsson.orchestration.mgmt.libs.VnfmJenkins.getSeedJobName
+
+
+// Stages template
+def stages = [:]
+// Set Agent label
+env.SEED_JOB = getSeedJobName(JOB_NAME)
+String label = getAgentLabel( type: 'unit-tests',
+                              project: env.SEED_JOB,
+                              this)
+
+
+node(label) {
+    try {
+        // Set Job's ENVs
+        env.JOB_TYPE = 'gerrit'
+        env.GLOBAL_VAR_PATH = 'jenkins/global.var'
+        env.VAR_PATH = 'jenkins/' + env.SEED_JOB + '/project.var'
+        env.GERRIT_BRANCH = params.GERRIT_BRANCH ?: 'master'
+        env.GERRIT_REFSPEC = params.GERRIT_REFSPEC ?: 'refs/heads/master'
+
+
+        // Run Prepare Stage
+        stage('Prepare') {
+            println('INFO: Checkout CI code...')
+            checkout(scm)
+
+            println('INFO: Load Global vars...')
+            load(env.GLOBAL_VAR_PATH)
+
+            println('INFO: Load Project vars...')
+            load(env.VAR_PATH)
+
+            println('INFO: Load Stages...')
+            stages['git'] = load(env.GIT_STAGE)
+            stages['clean'] = load(env.CLEAN_STAGE)
+            if(!(parseBoolean(env.SKIP_BUILD))) {
+                stages['build'] = load(env.BUILD_STAGE)
+            }
+            if(!parseBoolean(env.SKIP_UNIT_TESTS)) {
+                stages['unit-tests'] = load(env.UNIT_TESTS_STAGE)
+            }
+            if(!parseBoolean(env.SKIP_SONAR_TESTS)) {
+                stages['quality-tests'] = load(env.QUALITY_TESTS_STAGE)
+                stages['sonar'] = load(env.SONAR_STAGE)
+            }
+        }
+
+        // Run Checkout Project Stage
+        stages['git'].CheckoutProject(project: env.GERRIT_PROJECT,
+                                      branch: env.GERRIT_BRANCH,
+                                      refspec: env.GERRIT_REFSPEC,
+                                      type: 'change')
+
+        if(!(parseBoolean(env.SKIP_BUILD))) {
+            // Run Build Stage
+            stages['build'].GolangBuild( project: env.GERRIT_PROJECT,
+                                         source_folder: env.SOURCE_FOLDER)
+        }
+
+        if(!parseBoolean(env.SKIP_UNIT_TESTS)) {
+            // Run Unit Tests Stage
+            stages['unit-tests'].GolangTests(env.GERRIT_PROJECT)
+        }
+
+        if(!parseBoolean(env.SKIP_SONAR_TESTS)) {
+            // Run Coverage Test Stage
+            stages['quality-tests'].CoverageTest(project: env.GERRIT_PROJECT)
+
+            // Run Sonar Analysis Stage
+            stages['sonar'].Analysis( project: env.GERRIT_PROJECT,
+                                      pom: env.POM_FILE)
+        }
+
+    } catch (Exception errJob) {
+        println(errJob)
+        currentBuild.result = 'FAILURE'
+    } finally {
+        // Run Clean Stage
+        stages['clean'].CleanBuild()
+    }
+}

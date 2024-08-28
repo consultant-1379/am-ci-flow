@@ -1,0 +1,33 @@
+/*******************************************************************************
+ * COPYRIGHT Ericsson 2024
+ *
+ *
+ *
+ * The copyright to the computer program(s) herein is the property of
+ *
+ * Ericsson Inc. The programs may be used and/or copied only with written
+ *
+ * permission from Ericsson Inc. or in accordance with the terms and
+ *
+ * conditions stipulated in the agreement/contract under which the
+ *
+ * program(s) have been supplied.
+ ******************************************************************************/
+// GIT ENVs
+env.GERRIT_PROJECT = 'am-package-manager'
+env.GERRIT_BRANCH = 'master'
+env.GIT_COMMIT_FILES = 'pom.xml'
+env.DISABLE_SUBMODULES = false
+
+
+// Docker ENVs
+env.DOCKER_DIR = '.'
+env.DOCKER_URL = 'armdocker.rnd.ericsson.se/proj-am'
+
+
+// Build ENVs
+env.SKIP_CHECK_STYLE = true
+env.SKIP_PRERELEASE = true
+env.SKIP_HELMFILE = true
+env.SKIP_POST_MERGE = true
+env.SKIP_PACKAGE_CHART = true

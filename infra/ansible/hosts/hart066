@@ -1,0 +1,5 @@
+[hart066]
+10.158.160.[52:67]
+
+[k8s_nodes:children]
+hart066

@@ -1,0 +1,227 @@
+#!/usr/bin/env groovy
+
+@Library('jenkins-shared-libs')
+import static Boolean.parseBoolean
+import static com.ericsson.orchestration.mgmt.libs.VnfmJenkins.getAgentLabel
+import static com.ericsson.orchestration.mgmt.libs.VnfmJenkins.getSeedJobName
+
+
+// Stages template
+def stages = [:]
+// Set Agent label
+String label = getAgentLabel( type: 'concurrent',
+                              this)
+String buildLabel = getAgentLabel(type: 'pre-release',
+                                  project: env.SEED_JOB,
+                                  topic: env.GERRIT_TOPIC,
+                                  this)
+
+
+node(label) {
+    try {
+        // Set Job's ENVs
+        env.SEED_JOB = getSeedJobName(JOB_NAME)
+        env.JOB_TYPE = 'pre-release'
+        env.GLOBAL_VAR_PATH = 'jenkins/global.var'
+        env.VAR_PATH = 'jenkins/' + env.SEED_JOB + '/project.var'
+        env.ENV_LABEL = 'evnfm-gr'
+        env.GERRIT_BRANCH = params.GERRIT_BRANCH
+        env.GERRIT_REFSPEC = params.GERRIT_REFSPEC
+        env.SKIP_CLEANUP = params.SKIP_CLEANUP
+
+
+        node(buildLabel) {
+            // Run Prepare Stage
+            stage('Prepare') {
+                println('INFO: Checkout CI code...')
+                checkout(scm)
+
+                println('INFO: Load Global vars...')
+                load(env.GLOBAL_VAR_PATH)
+
+                println('INFO: Load Project vars...')
+                load(env.VAR_PATH)
+
+                println('INFO: Load Stages...')
+                stages['git'] = load(env.GIT_STAGE)
+                stages['envs'] = load(env.ENVS_STAGE)
+                stages['build'] = load(env.BUILD_STAGE)
+                stages['docker'] = load(env.DOCKER_STAGE)
+                stages['helm'] = load(env.HELM_STAGE)
+                stages['jobs'] = load(env.JOBS_STAGE)
+                stages['run-job'] = load(env.RUN_JOB_STAGE)
+                stages['clean'] = load(env.CLEAN_STAGE)
+            }
+
+            // Run Checkout Project Stage
+            stages['git'].CheckoutProject(project: env.GERRIT_PROJECT,
+                                          branch: env.GERRIT_BRANCH,
+                                          refspec: env.GERRIT_REFSPEC,
+                                          type: 'change')
+
+            // Run Update Job ENVs Stage
+            stages['envs'].Update(project: env.GERRIT_PROJECT,
+                                  pom: env.POM_FILE)
+
+            // Run Update POM files Stage
+            stages['build'].UpdatePOM(env.GERRIT_PROJECT)
+
+            // Run Build Stage
+            stages['build'].BuildMaven( project: env.GERRIT_PROJECT,
+                                        pom: env.POM_FILE)
+
+            // Run Build Image Stage
+            stages['docker'].BuildImage(name: env.GERRIT_PROJECT)
+
+            // Run Package Helm Chart Stage
+            stages['helm'].PackageChart(project: env.GERRIT_PROJECT,
+                                        folder: env.CHART_FOLDER)
+
+            // Run Clean Build Agent Stage
+            stages['clean'].CleanBuild(stage: 'Clean Build Agent')
+        }
+
+        // Run Update ADP_FETCH_UPLOAD Job Parameter Stage
+        stages['jobs'].SetJobParameter( name: 'ADP_FETCH_UPLOAD_PARAMS',
+                                        job: 'adp-fetch-upload',
+                                        stage: 'Update ADP Fetch Upload parameters')
+
+        // Run Job ADP_FETCH_UPLOAD
+        stages['run-job'].RemoteJob(name: (env.ADP_FETCH_UPLOAD_JOB).split(':')[1],
+                                    server: (env.ADP_FETCH_UPLOAD_JOB).split(':')[0],
+                                    params: env.ADP_FETCH_UPLOAD_PARAMS,
+                                    artifact: 'artifact.properties')
+
+        // Run Update ADP_HELMFILE_FBU Job Parameter Stage
+        String fbuArt = env.ARTIFACTS_DIR + '/' + env.ADP_FETCH_UPLOAD_JOB + '.artifact'
+        stages['jobs'].SetJobParameter( name: 'ADP_HELMFILE_FBU_PARAMS',
+                                        job: 'adp-helmfile-fbu',
+                                        artifact: fbuArt,
+                                        stage: 'Update ADP Helmfile FBU parameters')
+
+        // Run Job ADP_HELMFILE_FBU
+        stages['run-job'].RemoteJob(name: (env.ADP_HELMFILE_FBU_JOB).split(':')[1],
+                                    server: (env.ADP_HELMFILE_FBU_JOB).split(':')[0],
+                                    params: env.ADP_HELMFILE_FBU_PARAMS,
+                                    artifact: 'artifact.properties')
+
+        parallel(
+            'Primary Site': {
+                // Run Set RESERVE_ENV Job Parameter Stage for Primary Site
+                stages['jobs'].SetJobParameter( name: 'PRIMARY_RESERVE_PARAMS',
+                                                job: 'reserve-env',
+                                                stage: 'Set Primary Reserve parameters')
+
+                // Run Job RESERVE_ENV for Primary Site
+                String primResStage = 'Primary Reserve ENV'
+                stages['run-job'].LocalJob( name: env.RESERVE_ENV_JOB,
+                                            params: evaluate(env.PRIMARY_RESERVE_PARAMS),
+                                            artifact: 'artifact.properties',
+                                            stage: primResStage)
+
+                // Run Set PRIMARY_ENV Stage
+                env.PRIMARY_RES_ART = env.ARTIFACTS_DIR + '/' + primResStage + '.artifact'
+                stages['jobs'].SetJobParameter( name: 'PRIMARY_ENV',
+                                                job: 'resource-name',
+                                                artifact: env.PRIMARY_RES_ART,
+                                                stage: 'Set Resource name for primary site')
+            },
+            'Secondary Site': {
+                // Run Set RESERVE_ENV Job Parameter Stage for Secondary Site
+                stages['jobs'].SetJobParameter( name: 'SECONDARY_RESERVE_PARAMS',
+                                                job: 'reserve-env',
+                                                stage: 'Set Secondary Reserve parameters')
+
+                // Run Job RESERVE_ENV for Secondary Site
+                String secResStage = 'Secondary Reserve ENV'
+                stages['run-job'].LocalJob( name: env.RESERVE_ENV_JOB,
+                                            params: evaluate(env.SECONDARY_RESERVE_PARAMS),
+                                            artifact: 'artifact.properties',
+                                            stage: secResStage)
+
+                // Run Set SECONDARY_ENV Stage
+                env.SECONDARY_RES_ART = env.ARTIFACTS_DIR + '/' + secResStage + '.artifact'
+                stages['jobs'].SetJobParameter( name: 'SECONDARY_ENV',
+                                                job: 'resource-name',
+                                                artifact: env.SECONDARY_RES_ART,
+                                                stage: 'Set Resource name for secondary site')
+            }
+        )
+
+        // Run Set Job Parameter Stage
+        stages['jobs'].SetJobParameter( name: 'DEPLOY_PARAMS',
+                                        job: 'gr-deploy',
+                                        stage: 'Set Deploy parameters')
+
+        // Run Deploy GR Stage
+        String deployStage = 'Deploy GR'
+        stages['run-job'].LocalJob( name: env.GR_DEPLOY_JOB,
+                                    params: evaluate(env.DEPLOY_PARAMS),
+                                    artifact: 'artifact.properties',
+                                    stage: deployStage)
+
+        // Run Set Job Parameter Stage
+        String upgradeArt = env.ARTIFACTS_DIR + '/' + env.ADP_HELMFILE_FBU_JOB + '.artifact'
+        stages['jobs'].SetJobParameter( name: 'UPGRADE_PARAMS',
+                                        job: 'gr-deploy',
+                                        artifact: upgradeArt,
+                                        stage: 'Set Upgrade parameters')
+
+        // Run Upgrade GR Stage
+        String upgradeStage = 'Upgrade GR'
+        stages['run-job'].LocalJob( name: env.GR_DEPLOY_JOB,
+                                    params: evaluate(env.UPGRADE_PARAMS),
+                                    artifact: 'artifact.properties',
+                                    stage: upgradeStage)
+
+        // Run Set Job Parameter Stage
+        stages['jobs'].SetJobParameter( name: 'TESTS_PARAMS',
+                                        job: 'gr-tests',
+                                        artifact: upgradeStage + '.artifact',
+                                        stage: 'Set Tests parameters')
+
+        // Run GR Test Job
+        stages['run-job'].LocalJob( name: env.GR_TEST_JOB,
+                                    params: evaluate(env.TESTS_PARAMS),
+                                    stage: 'GR Tests')
+
+    } catch (Exception errJob) {
+        println(errJob)
+        currentBuild.result = 'FAILURE'
+    } finally {
+        parallel(
+            'Primary Site': {
+                // Run Set UNLOCK Job Parameter Stage for Primary Site
+                stages['jobs'].SetJobParameter( name: 'PRIMARY_UNLOCK_PARAMS',
+                                                job: 'unlock',
+                                                artifact: env.PRIMARY_RES_ART,
+                                                stage: 'Set Primary Unlock parameters',
+                                                skip: parseBoolean(env.SKIP_CLEANUP))
+
+                // Run Job UNLOCK for Primary Site
+                stages['run-job'].LocalJob( name: env.UNLOCK_JOB,
+                                            params: evaluate(env.PRIMARY_UNLOCK_PARAMS),
+                                            wait: false,
+                                            stage: 'Unlock Primary Environment',
+                                            skip: parseBoolean(env.SKIP_CLEANUP))
+            },
+            'Secondary Site': {
+                // Run Set UNLOCK Job Parameter Stage for Secondary Site
+                stages['jobs'].SetJobParameter( name: 'SECONDARY_UNLOCK_PARAMS',
+                                                job: 'unlock',
+                                                artifact: env.SECONDARY_RES_ART,
+                                                stage: 'Set Secondary Unlock parameters',
+                                                skip: parseBoolean(env.SKIP_CLEANUP))
+
+                // Run Job UNLOCK for Secondary Site
+                stages['run-job'].LocalJob( name: env.UNLOCK_JOB,
+                                            params: evaluate(env.SECONDARY_UNLOCK_PARAMS),
+                                            wait: false,
+                                            stage: 'Unlock Secondary Environment',
+                                            skip: parseBoolean(env.SKIP_CLEANUP))
+            }
+        )
+
+        cleanWs()
+    }
+}

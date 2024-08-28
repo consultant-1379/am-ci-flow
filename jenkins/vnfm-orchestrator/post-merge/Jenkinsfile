@@ -1,0 +1,217 @@
+#!/usr/bin/env groovy
+
+@Library('jenkins-shared-libs')
+import static Boolean.parseBoolean
+import static com.ericsson.orchestration.mgmt.libs.VnfmJenkins.getAgentLabel
+import static com.ericsson.orchestration.mgmt.libs.VnfmJenkins.getSeedJobName
+import static com.ericsson.orchestration.mgmt.libs.VnfmGerrit.getLatestTag
+
+
+// Stages template
+def stages = [:]
+// Set Agent label
+env.SEED_JOB = getSeedJobName(JOB_NAME)
+String label = getAgentLabel( type: 'gerrit',
+                              this)
+String testsLabel = getAgentLabel(type: 'post-merge',
+                                  project: env.SEED_JOB,
+                                  this)
+
+
+node(label) {
+    try {
+        // Set Job's ENVs
+        env.JOB_TYPE = 'post-merge'
+        env.GLOBAL_VAR_PATH = 'jenkins/global.var'
+        env.VAR_PATH = 'jenkins/' + env.SEED_JOB + '/project.var'
+        env.GERRIT_BRANCH = 'master'
+
+
+        // Run Prepare Stage
+        stage('Prepare') {
+            println('INFO: Checkout CI code...')
+            checkout(scm)
+
+            println('INFO: Load Global vars...')
+            load(env.GLOBAL_VAR_PATH)
+
+            println('Load Project vars...')
+            load(env.VAR_PATH)
+
+            println('INFO: Load Stages...')
+            stages['git'] = load(env.GIT_STAGE)
+            stages['envs'] = load(env.ENVS_STAGE)
+            stages['build'] = load(env.BUILD_STAGE)
+            stages['unit-tests'] = load(env.UNIT_TESTS_STAGE)
+            stages['quality-tests'] = load(env.QUALITY_TESTS_STAGE)
+            stages['sonar'] = load(env.SONAR_STAGE)
+            stages['helm'] = load(env.HELM_STAGE)
+            stages['clean'] = load(env.CLEAN_STAGE)
+
+            env.PROJECT_TAG = getLatestTag( project: env.GERRIT_PROJECT,
+                                            url: env.GERRIT_URL,
+                                            this)
+            println('INFO: Latest tag is ' + env.PROJECT_TAG)
+        }
+
+        // Run Checkout Project Stage
+        stages['git'].CheckoutProject(project: env.GERRIT_PROJECT,
+                                      branch: env.GERRIT_BRANCH,
+                                      type: 'tag',
+                                      tag: env.PROJECT_TAG)
+
+        // Run Update Job ENVs Stage
+        stages['envs'].Update(project: env.GERRIT_PROJECT)
+
+        // Run Build Stage
+        stages['build'].BuildMaven(project: env.GERRIT_PROJECT)
+
+        // Run Checkout Uplift Project Stage
+        stages['git'].CheckoutProject(project: env.UPLIFT_PROJECT,
+                                      branch: env.UPLIFT_BRANCH,
+                                      type: 'push')
+
+        // Run Uplift Dependency Stage
+        stages['helm'].UpliftDependency(name: env.UPLIFT_NAME ?: env.PROJECT_NAME,
+                                        version: env.CHART_VERSION,
+                                        project: env.UPLIFT_PROJECT,
+                                        file: env.UPLIFT_FILE_PATH)
+
+        // Run Create Change Stage
+        String message = env.CHANGE_MESSAGE
+                                          .replace('_PROJECT_NAME_', env.CHART_NAME)
+                                          .replace('_version_', env.CHART_VERSION)
+        stages['git'].CreateChange(project: env.UPLIFT_PROJECT,
+                                   files: env.UPLIFT_FILE_PATH,
+                                   message: message,
+                                   topic: env.CHART_NAME,
+                                   version: env.CHART_VERSION,
+                                   submit: true)
+
+        parallel(
+            'Unit Tests' : {
+                node(testsLabel) {
+                    catchError(buildResult: 'UNSTABLE', stageResult: 'FAILURE') {
+                        // Run Checkout Project Stage
+                        stages['git'].CheckoutProject(project: env.GERRIT_PROJECT,
+                                                      branch: env.GERRIT_BRANCH,
+                                                      type: 'tag',
+                                                      tag: env.PROJECT_TAG)
+
+                        // Run Unit Tests Stage
+                        stages['unit-tests'].MavenUnitTests(project: env.GERRIT_PROJECT)
+                    }
+
+                    // Copy test files
+                    dir(env.REPORT_PATH) {
+                        stash(name: 'UnitTests',
+                              includes: '*.exec',
+                              allowEmpty: true)
+                    }
+
+                    // Run Clean Agent Stage
+                    stages['clean'].CleanBuild(stage: 'Clean test agent')
+                }
+
+                // Paste test files
+                dir(env.REPORT_PATH) {
+                    unstash('UnitTests')
+                }
+            },
+            'Contracts Tests' : {
+                node(testsLabel) {
+                    catchError(buildResult: 'UNSTABLE', stageResult: 'FAILURE') {
+                        // Run Checkout Project Stage
+                        stages['git'].CheckoutProject(project: env.GERRIT_PROJECT,
+                                                      branch: env.GERRIT_BRANCH,
+                                                      type: 'tag',
+                                                      tag: env.PROJECT_TAG)
+
+                        // Run Contracts Tests Stage
+                        stages['unit-tests'].MavenContractsTests(project: env.GERRIT_PROJECT)
+                    }
+
+                    // Copy test files
+                    dir(env.REPORT_PATH) {
+                        stash(name: 'ContractsTests',
+                              includes: '*.exec',
+                              allowEmpty: true)
+                    }
+
+                    // Run Clean Agent Stage
+                    stages['clean'].CleanBuild(stage: 'Clean test agent')
+                }
+
+                // Paste test files
+                dir(env.REPORT_PATH) {
+                    unstash('ContractsTests')
+                }
+            },
+            'End-to-End Tests': {
+                node(testsLabel) {
+                    catchError(buildResult: 'UNSTABLE', stageResult: 'FAILURE') {
+                        // Run Checkout Project Stage
+                        stages['git'].CheckoutProject(project: env.GERRIT_PROJECT,
+                                                      branch: env.GERRIT_BRANCH,
+                                                      type: 'tag',
+                                                      tag: env.PROJECT_TAG)
+
+                        // Run End-to-End Tests Stage
+                        stages['unit-tests'].MavenE2ETests(project: env.GERRIT_PROJECT)
+                    }
+
+                    // Copy test files
+                    dir(env.REPORT_PATH) {
+                        stash(name: 'End-to-EndTests',
+                              includes: '*.exec',
+                              allowEmpty: true)
+                    }
+
+                    // Run Clean Agent Stage
+                    stages['clean'].CleanBuild(stage: 'Clean test agent')
+                }
+
+                // Paste test files
+                dir(env.REPORT_PATH) {
+                    unstash('End-to-EndTests')
+                }
+            },
+            'DR Tests': {
+                node(testsLabel) {
+                    catchError(buildResult: 'UNSTABLE', stageResult: 'FAILURE') {
+                        // Run Checkout Project Stage
+                        stages['git'].CheckoutProject(project: env.GERRIT_PROJECT,
+                                                      branch: env.GERRIT_BRANCH,
+                                                      type: 'tag',
+                                                      tag: env.PROJECT_TAG)
+
+                        // Run Package Helm Chart Stage
+                        stages['helm'].PackageChart(project: env.GERRIT_PROJECT,
+                                                    upload: false)
+
+                        // Run Design Rule Check Stage
+                        stages['helm'].DesignRuleCheck( project: env.GERRIT_PROJECT,
+                                                        upload: true)
+                    }
+
+                    // Run Clean Agent Stage
+                    stages['clean'].CleanBuild(stage: 'Clean test agent')
+                }
+            }
+        )
+
+        // Run Coverage Test Stage
+        stages['quality-tests'].CoverageTest(project: env.GERRIT_PROJECT)
+
+        // Run Sonar Analysis Stage
+        stages['sonar'].Analysis( project: env.GERRIT_PROJECT,
+                                  abort: false)
+
+    } catch (Exception errJob) {
+        println(errJob)
+        currentBuild.result = 'FAILURE'
+    } finally {
+        // Run Clean Stage
+        stages['clean'].CleanBuild()
+    }
+}

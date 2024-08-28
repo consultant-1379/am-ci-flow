@@ -1,0 +1,28 @@
+- name: "Check YQ"
+  shell: "yq --version"
+  register: yq_check
+  ignore_errors: true
+  changed_when: false
+
+- name: "Install JQ dependency"
+  yum:
+    name: jq
+    update_cache: yes
+    state: present
+  when: yq_check.stdout == ""
+
+- name: "Install YQ"
+  shell: "{{ item }}"
+  with_items:
+    - "pip3 install yq=={{ yq_version }}"
+    - "rm -f /usr/bin/yq"
+    - "ln -s /usr/local/bin/yq /usr/bin/yq"
+  args:
+    warn: false
+    chdir: "/tmp"
+  when: yq_check.stdout == ""
+
+- name: "YQ status"
+  debug:
+    msg: "YQ version: {{ yq_check.stdout }}"
+  when: yq_check.stdout

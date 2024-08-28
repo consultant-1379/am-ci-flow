@@ -1,0 +1,5 @@
+-
+  name: Make space on the jenkins slaves
+  hosts: all
+  roles:
+    - playbook

@@ -1,0 +1,31 @@
+---
+- name: get java path
+  shell: "update-alternatives --display java | awk '/^\\/.*openjdk-{{ java_version }}/{print $1}'"
+  register: java_path
+  become: true
+  become_user: root
+- name: select correct java version
+  alternatives:
+    name: java
+    link: /usr/bin/java
+    path: "{{ java_path.stdout }}"
+  become: true
+  become_user: root
+- name: remove issuing CA
+  shell: "keytool -storepass 'changeit' -noprompt -trustcacerts -delete -alias egadCA3 -keystore /etc/pki/java/cacerts"
+  become: true
+  become_user: root
+  ignore_errors: yes
+- name: add issuing CA
+  shell: "keytool -storepass 'changeit' -noprompt -trustcacerts -importcert -file /tmp/EGADIssuingCA3.crt -alias egadCA3 -keystore /etc/pki/java/cacerts"
+  become: true
+  become_user: root
+- name: remove root CA
+  shell: "keytool -storepass 'changeit' -noprompt -trustcacerts -delete -alias egadRootCA -keystore /etc/pki/java/cacerts"
+  become: true
+  become_user: root
+  ignore_errors: yes
+- name: add root CA
+  shell: "keytool -storepass 'changeit' -noprompt -trustcacerts -importcert -file /tmp/EGADRootCA.crt -alias egadRootCA -keystore /etc/pki/java/cacerts"
+  become: true
+  become_user: root

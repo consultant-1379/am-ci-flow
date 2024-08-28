@@ -1,0 +1,59 @@
+#!/usr/bin/env groovy
+
+@Library('jenkins-shared-libs')
+import static com.ericsson.orchestration.mgmt.libs.VnfmJenkins.getAgentLabel
+import static com.ericsson.orchestration.mgmt.libs.VnfmJenkins.getSeedJobName
+import static com.ericsson.orchestration.mgmt.libs.VnfmJira.getWikiPageConfig
+
+
+// Stages template
+def stages = [:]
+// Set Agent label
+String label = getAgentLabel( type: 'gerrit',
+                              this)
+
+
+node(label) {
+    try {
+        // Set Job's ENVs
+        env.SEED_JOB = getSeedJobName(JOB_NAME)
+        env.SHORT_JOB_NAME = JOB_NAME.minus(env.SEED_JOB + '_')
+        env.GLOBAL_VAR_PATH = 'jenkins/global.var'
+        env.VAR_PATH = 'jenkins/' + env.SEED_JOB + '/project.var'
+        env.CONTENT_FILE = 'jobs.html'
+
+
+        // Run Prepare Stage
+        stage('Prepare') {
+            println('INFO: Checkout CI code...')
+            checkout(scm)
+
+            println('INFO: Load Global vars...')
+            load(env.GLOBAL_VAR_PATH)
+
+            println('INFO: Load Project vars...')
+            load(env.VAR_PATH)
+
+            println('INFO: Load Stages...')
+            stages['jobs'] = load(env.JOBS_STAGE)
+            stages['post'] = load(env.POST_STAGE)
+            stages['clean'] = load(env.CLEAN_STAGE)
+        }
+
+        // Run Jobs Discover Stage
+        Map page = getWikiPageConfig(env.SHORT_JOB_NAME)
+        stages['jobs'].Discover(file: env.CONTENT_FILE,
+                                description: page['description'])
+
+    } catch (Exception errJob) {
+        println(errJob)
+        currentBuild.result = 'FAILURE'
+    } finally {
+        // Run Post Actions Stage
+        stages['post'].ServiceJob(name: env.SHORT_JOB_NAME,
+                                  status: currentBuild.result ?: 'SUCCESS')
+
+        // Run Clean Stage
+        stages['clean'].CleanBuild()
+    }
+}

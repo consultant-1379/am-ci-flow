@@ -1,0 +1,42 @@
+pipeline {
+    agent none
+
+    options {
+        timestamps()
+    }
+
+    stages {
+
+        stage('execute security script') {
+            steps {
+                sh '''
+                    chmod +x scripts/*
+                    rm -rf security_reports || echo "Folder didn't exist so no deletion needed"
+                    mkdir security_reports
+                    cd security_reports
+                    script_params=" --print"
+                    if [ ${XRAY} == true ]; then
+                        script_params="${script_params} --xray"
+                    fi
+                    if [ ${ANCHORE} == true ]; then
+                        script_params="${script_params} --anchore"
+                    fi
+                    if [ ${TRIVY} == true ]; then
+                        script_params="${script_params} --trivy"
+                    fi
+                    if [ ${OLD_EO_CHART_VERSION} != '' ]; then
+                        script_params="${script_params} --eoPreviousVersion ${OLD_EO_CHART_VERSION}"
+                    fi
+                    script_params="${script_params} --eoVersion ${EO_CHART_VERSION}"
+                    echo ${script_params}
+                    python3 ../scripts/security_functions.py ${script_params}
+                '''
+            }
+        }
+    }
+    post {
+        always {
+            archiveArtifacts artifacts: '**/security_reports/**/*.* ', allowEmptyArchive: true
+        }
+    }
+}

@@ -1,0 +1,67 @@
+#
+# COPYRIGHT Ericsson 2024
+#
+#
+#
+# The copyright to the computer program(s) herein is the property of
+#
+# Ericsson Inc. The programs may be used and/or copied only with written
+#
+# permission from Ericsson Inc. or in accordance with the terms and
+#
+# conditions stipulated in the agreement/contract under which the
+#
+# program(s) have been supplied.
+#
+
+# Gerrit Unit Tests Job
+gerritUnitTests:
+  name: "gerrit-unit-tests"
+  description: "Pipeline for gerrit unit review as a part of Gerrit verification process"
+  file: "jenkins/pipelines/gerrit-unit-tests/helm/Jenkinsfile"
+  maxLogDays: "14"
+  maxLogBuilds: "20"
+  gerritBranch: "master"
+  gerritTriggers: "Patchset Created" # Values: "Submit-To-Pipeline"; "Change Merged"; "Patchset Created"; false
+  parallelRun: true
+  enable: true
+# Gerrit Quality Checks Job
+gerritQualityChecks:
+  name: "gerrit-quality-checks"
+  description: "Pipeline for gerrit quality review as a part of Gerrit verification process"
+  file: "jenkins/pipelines/gerrit-quality-checks/base/Jenkinsfile"
+  maxLogDays: "14"
+  maxLogBuilds: "20"
+  gerritBranch: "master"
+  gerritTriggers: "Patchset Created" # Values: "Submit-To-Pipeline"; "Change Merged"; "Patchset Created"; false
+  parallelRun: true
+  enable: true
+# Submit-To-Pipeline Job
+submitToPipeline:
+  name: "Submit-To-Pipeline"
+  description: "Pipeline for run Submit-To-Pipeline trigger flow"
+  file: "jenkins/pipelines/submit-to-pipeline/base/Jenkinsfile"
+  maxLogDays: "14"
+  maxLogBuilds: "20"
+  gerritBranch: ".*"
+  gerritTriggers: "Submit-To-Pipeline" # Values: "Submit-To-Pipeline"; "Change Merged"; "Patchset Created"; false
+  parallelRun: true
+  enable: true
+# Release Flow job
+releaseFlow:
+  name: "release-flow"
+  description: "Pipeline for release branch"
+  file: "jenkins/pipelines/release/helm/Jenkinsfile"
+  maxLogDays: "14"
+  maxLogBuilds: "20"
+  parallelRun: false
+  enable: true
+# Post-Merge Job
+postMerge:
+  name: "post-merge"
+  description: "Pipeline for Post-Merge actions"
+  file: "jenkins/pipelines/post-merge/jdk17-uplift/Jenkinsfile"
+  maxLogDays: "7"
+  maxLogBuilds: "20"
+  cron: "TZ=Europe/Kiev\nH 2 * * 2"
+  enable: true

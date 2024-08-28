@@ -1,0 +1,15 @@
+Logs need analysis to determine the cause of the failure.
+The issue should be classified as follows: whether it is a known issue or a new one.
+
+
+*Known issue:* If there is an existing corresponding ticket to resolve this known issue (present on the TestNG issues Dashboard), link this ticket with the investigation of TestNG failure #[BUILD_NUMBER] and close it with a relevant comment.
+
+
+*New issue:* If the problem is new and no corresponding Jira ticket is present on the TestNG issues Dashboard, raise a support ticket by cloning template [[EO-171183] CVNFM TestNG Fix: <Cloneable Template Ticket_ Issue name> - PDUOSS - JIRA (ericsson.com)|https://eteamproject.internal.ericsson.com/browse/EO-171183] and proceed to resolve it.
+
+
+After analysis notify CI team on duty person in chat if failed #[BUILD_NUMBER] have to be retriggered or initiate decision on merge closure. [https://eteamspace.internal.ericsson.com/display/ESO/TestNG+Design+On-Call+Rota]
+
+
+*TestNG job:* [[JOB_NAME] #[BUILD_NUMBER]|[BUILD_URL]]
+*Link to Nexus server:* [[NEXUS_TESTNG_NAME]|[NEXUS_URL]/content/repositories/[NEXUS_TESTNG_PATH]/[NEXUS_TESTNG_NAME]]

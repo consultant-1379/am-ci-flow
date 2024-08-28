@@ -1,0 +1,79 @@
+{
+    "description": "This pipeline is maintained by spinnaker as a code, any changes made through the ui will be overwritten. Template name: functional_testing in repo am-ci-flow",
+    "schema": "1",
+    "spelEvaluator": "v4",
+    "parameterConfig": [
+        {
+            "name": "CLUSTER",
+            "default": "flex",
+            "description": "",
+            "hasOptions": false,
+            "pinned": false,
+            "required": true
+        },
+        {
+            "name": "HOST_HELM",
+            "default": "",
+            "description": "",
+            "hasOptions": false,
+            "pinned": false,
+            "required": true
+        },
+        {
+            "name": "HOST_IAM",
+            "default": "",
+            "description": "",
+            "hasOptions": false,
+            "pinned": false,
+            "required": true
+        },
+        {
+            "name": "HOST_VNFM",
+            "default": "",
+            "description": "",
+            "hasOptions": false,
+            "pinned": false,
+            "required": true
+        },
+        {
+            "name": "NAMESPACE",
+            "default": "",
+            "description": "",
+            "hasOptions": false,
+            "pinned": false,
+            "required": true
+        },
+        {
+            "name": "AM_INTEGRATION_REFSPEC",
+            "default": "refs/heads/master",
+            "description": "AM_INTEGRATION_REFSPEC",
+            "label": "AM_INTEGRATION_REFSPEC",
+            "hasOptions": false,
+            "pinned": false,
+            "required": false
+        }
+    ],
+    "stages": [
+        {
+            "name": "E-VNFM_TestNG",
+            "refId": "testng",
+            "requisiteStageRefIds": [],
+            "continuePipeline": false,
+            "failPipeline": true,
+            "stageTimeoutMs": 10800000,
+            "type": "jenkins",
+            "master": "dss-aispinn-fem4s11-eiffel052",
+            "job": "E-VNFM_TestNG",
+            "parameters": {
+              "AM_INTEGRATION_REFSPEC": "${trigger['parameters']['AM_INTEGRATION_REFSPEC']}",
+              "CLUSTER": "${trigger['parameters']['CLUSTER']}",
+              "HOST_HELM": "${trigger['parameters']['HOST_HELM']}",
+              "HOST_IAM": "${trigger['parameters']['HOST_IAM']}",
+              "HOST_VNFM": "${trigger['parameters']['HOST_VNFM']}",
+              "IDAM_PASSWORD": "Ericsson123!",
+              "IDAM_USERNAME": "vnfm",
+              "NAMESPACE": "${trigger['parameters']['NAMESPACE']}"
+          }
+        }
+    ]
+}

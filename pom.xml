@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ ~ COPYRIGHT Ericsson 2024
+ ~
+ ~
+ ~
+ ~ The copyright to the computer program(s) herein is the property of
+ ~
+ ~ Ericsson Inc. The programs may be used and/or copied only with written
+ ~
+ ~ permission from Ericsson Inc. or in accordance with the terms and
+ ~
+ ~ conditions stipulated in the agreement/contract under which the
+ ~
+ ~ program(s) have been supplied.
+ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+  <groupId>com.ericsson.orchestration.mgmt</groupId>
+  <artifactId>am-ci-flow</artifactId>
+  <version>0.1.0</version>
+  <packaging>pom</packaging>
+  <name>E-VNFM CI/CD pipelines</name>
+  <profiles>
+    <profile>
+      <id>license</id>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>com.mycila</groupId>
+            <artifactId>license-maven-plugin</artifactId>
+            <version>3.0</version>
+            <configuration>
+              <header>./license/copyright.txt</header>
+              <properties>
+                <license.year>2024</license.year>
+              </properties>
+              <excludes>
+                  <exclude>*.md</exclude>
+                  <exclude>deprecated/</exclude>
+                  <exclude>docker/jenkins/configs/</exclude>
+                  <exclude>evnfm-deploy/</exclude>
+                  <exclude>infra/</exclude>
+                  <exclude>license/</exclude>
+                  <exclude>scripts/</exclude>
+                  <exclude>spinnaker/</exclude>
+                  <exclude>templates/</exclude>
+                  <exclude>workarounds/</exclude>
+                  <exclude>**/Jenkinsfile</exclude>
+                  <exclude>*.png</exclude>
+                  <exclude>**/*.sh</exclude>
+              </excludes>
+              <headerDefinitions>
+                <headerDefinition>./license/javaHeaderDefinition.xml</headerDefinition>
+                <headerDefinition>./license/xmlHeaderDefinition.xml</headerDefinition>
+              </headerDefinitions>
+              <mapping>
+                <var>javadoc_style</var>
+              </mapping>
+            </configuration>
+            <executions>
+              <execution>
+                <goals>
+                  <goal>check</goal>
+                </goals>
+              </execution>
+            </executions>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+  </profiles>
+</project>

@@ -1,0 +1,10 @@
+---
+- name: "copy file to remote"
+  copy:
+    src: "{{ source }}"
+    dest: "{{ dest }}"
+    owner: "{{ owner }}"
+    group: "{{ group }}"
+    mode: "{{ mode }}"
+  become: true
+  become_user: root

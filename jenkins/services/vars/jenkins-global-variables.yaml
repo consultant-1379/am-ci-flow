@@ -1,0 +1,38 @@
+#
+# COPYRIGHT Ericsson 2024
+#
+#
+#
+# The copyright to the computer program(s) herein is the property of
+#
+# Ericsson Inc. The programs may be used and/or copied only with written
+#
+# permission from Ericsson Inc. or in accordance with the terms and
+#
+# conditions stipulated in the agreement/contract under which the
+#
+# program(s) have been supplied.
+#
+
+- name: "GERRIT_CENTRAL"
+  value: "ssh://gerrit.ericsson.se:29418"
+- name: "GERRIT_GAMMA_HTTP_URL"
+  value: "https://gerrit-gamma-uat.gic.ericsson.se/a"
+- name: "GERRIT_GAMMA_URL"
+  value: "https://gerrit-gamma-uat.gic.ericsson.se"
+- name: "GERRIT_HTTP_URL"
+  value: "https://gerrit-gamma.gic.ericsson.se/a"
+- name: "GERRIT_MIRROR"
+  value: "ssh://gerrit-gamma-read.sero.gic.ericsson.se:29418"
+- name: "GERRIT_PULL"
+  value: "ssh://gerritmirror-ha.lmera.ericsson.se:29418"
+- name: "GERRIT_PUSH"
+  value: "ssh://gerrit.ericsson.se:29418"
+- name: "GERRIT_SSH_CENTRAL"
+  value: "ssh://amadm100@gerrit.ericsson.se:29418"
+- name: "GERRIT_SSH_MIRROR"
+  value: "ssh://amadm100@gerrit-gamma-read.seli.gic.ericsson.se:29418"
+- name: "GERRIT_URL"
+  value: "https://gerrit-gamma.gic.ericsson.se"
+- name: "SSH_USER"
+  value: "amadm100"

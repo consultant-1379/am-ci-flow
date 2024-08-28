@@ -1,0 +1,134 @@
+#!/usr/bin/env groovy
+
+@Library('jenkins-shared-libs')
+import org.jenkinsci.plugins.pipeline.modeldefinition.Utils
+import static com.ericsson.orchestration.mgmt.libs.VnfmJenkins.getAgentLabel
+import static com.ericsson.orchestration.mgmt.libs.VnfmJenkins.getSeedJobName
+
+
+// Stages template
+def stages = [:]
+// Set Agent label
+env.SEED_JOB = getSeedJobName(JOB_NAME)
+String label = getAgentLabel( type: 'release',
+                              project: env.SEED_JOB,
+                              topic: env.GERRIT_TOPIC,
+                              this)
+
+
+node(label) {
+    try {
+        // Set Job's ENVs
+        env.JOB_TYPE = 'release'
+        env.GLOBAL_VAR_PATH = 'jenkins/global.var'
+        env.VAR_PATH = 'jenkins/' + env.SEED_JOB + '/project.var'
+        env.BRANCH = params.BRANCH
+        env.TYPE = params.TYPE
+        env.GERRIT_CHANGE_URL = params.GERRIT_CHANGE_URL
+        env.GERRIT_CHANGE_SUBJECT = params.GERRIT_CHANGE_SUBJECT
+
+
+        // Run Prepare Stage
+        stage('Prepare') {
+            println('INFO: Checkout CI code...')
+            checkout(scm)
+
+            println('INFO: Load Global vars...')
+            load(env.GLOBAL_VAR_PATH)
+
+            println('INFO: Load Project vars...')
+            load(env.VAR_PATH)
+
+            println('INFO: Load Stages...')
+            stages['git'] = load(env.GIT_STAGE)
+            stages['envs'] = load(env.ENVS_STAGE)
+            stages['build'] = load(env.BUILD_STAGE)
+            stages['docker'] = load(env.DOCKER_STAGE)
+            stages['helm'] = load(env.HELM_STAGE)
+            stages['run-job'] = load(env.RUN_JOB_STAGE)
+            stages['post'] = load(env.POST_STAGE)
+            stages['jira'] = load(env.JIRA_STAGE)
+            stages['clean'] = load(env.CLEAN_STAGE)
+        }
+
+        // Run Checkout Project Stage
+        stages['git'].CheckoutProject(project: env.GERRIT_PROJECT,
+                                      branch: env.BRANCH)
+
+        // Run Update Job ENVs Stage
+        stages['envs'].Update(project: env.GERRIT_PROJECT,
+                              type: env.TYPE)
+
+        // Run Update POM files Stage
+        stages['build'].UpdatePOM(env.GERRIT_PROJECT)
+
+        // Run Build stage
+        stages['build'].BuildNodeJS(env.GERRIT_PROJECT)
+
+        // Run Build Image Stage
+        stages['docker'].BuildImage(name: env.GERRIT_PROJECT)
+
+        // Run Package Helm Chart Stage
+        stages['helm'].PackageChart(project: env.GERRIT_PROJECT,
+                                    version: env.CHART_VERSION,
+                                    upload: true)
+
+        // Run Git Commit Release Stage
+        stages['git'].CommitRelease(project: env.GERRIT_PROJECT,
+                                    version: env.CHART_VERSION)
+
+        // Run Git Commit Snapshot Stage
+        Boolean skipSnapshot = !(env.TYPE in ['base', 'minor'])
+        stages['git'].CommitSnapshot( project: env.GERRIT_PROJECT,
+                                      version: env.CHART_VERSION,
+                                      skip: skipSnapshot)
+
+        // Run Push Changes Stage
+        stages['git'].PushChanges(project: env.GERRIT_PROJECT,
+                                  branch: env.BRANCH,
+                                  version: env.CHART_VERSION)
+
+        // Run Set Spinnaker parameters Stage
+        Boolean skipSpinnaker = !(env.BRANCH in ['master'] && env.TYPE in ['base'])
+        Map spinnakerParams = [:]
+        stage('Set Spinnaker parameters') {
+            if(skipSpinnaker) {
+                Utils.markStageSkippedForConditional(STAGE_NAME)
+            } else {
+                Boolean submitToStaging = env.BRANCH == 'master'
+
+                spinnakerParams['CHART_NAME'] = env.CHART_NAME
+                spinnakerParams['CHART_VERSION'] = env.CHART_VERSION
+                spinnakerParams['CHART_REPO'] = env.CHART_REPO
+                spinnakerParams['GIT_COMMIT_AUTHOR'] = env.GIT_COMMIT_AUTHOR
+                spinnakerParams['GIT_COMMIT_AUTHOR_EMAIL'] = env.GIT_COMMIT_AUTHOR_EMAIL
+                spinnakerParams['GIT_COMMIT_SUMMARY'] = env.GIT_COMMIT_SUMMARY
+                spinnakerParams['GERRIT_CHANGE_URL'] = env.GERRIT_CHANGE_URL ?: ''
+                spinnakerParams['parameters'] = [ SUBMIT_TO_EO_STAGING: submitToStaging,
+                                                  TRIGGER: "${env.JOB_NAME} Build #${env.BUILD_NUMBER}"]
+
+                println('INFO: List Spinnaker parameters...')
+                println(spinnakerParams)
+            }
+        }
+
+        // Trigger Spinnaker Job
+        stages['run-job'].SpinnakerJob( hook: env.SPINNNAKER_HOOK_NAME,
+                                        params: spinnakerParams,
+                                        skip: skipSpinnaker)
+
+    } catch (Exception errJob) {
+        println(errJob)
+        currentBuild.result = 'FAILURE'
+    } finally {
+        // Run Post Actions Stage
+        stages['post'].Release(status: currentBuild.result ?: 'SUCCESS')
+
+        // Run Add Comment to Jira Ticket Stage
+        stages['jira'].AddJiraTicketComment(url: env.JIRA_URL,
+                                            subject: env.GERRIT_CHANGE_SUBJECT)
+
+        // Run Clean Stage
+        stages['clean'].CleanBuild()
+    }
+}

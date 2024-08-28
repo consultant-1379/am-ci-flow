@@ -1,0 +1,49 @@
+/*******************************************************************************
+ * COPYRIGHT Ericsson 2024
+ *
+ *
+ *
+ * The copyright to the computer program(s) herein is the property of
+ *
+ * Ericsson Inc. The programs may be used and/or copied only with written
+ *
+ * permission from Ericsson Inc. or in accordance with the terms and
+ *
+ * conditions stipulated in the agreement/contract under which the
+ *
+ * program(s) have been supplied.
+ ******************************************************************************/
+// Job's name ENVs
+env.RELEASE_JOB = 'am-common-wfs_release-flow'
+
+
+// GIT ENVs
+env.GERRIT_PROJECT = 'am-common-wfs'
+env.GIT_COMMIT_FILES = '''  pom.xml \\
+                          | eric-am-common*/pom.xml \\
+                          | charts/eric-am-common-wfs/eric-product-info.yaml'''.stripMargin()
+env.DISABLE_SUBMODULES = false
+
+
+// Docker ENVs
+env.DOCKER_DIR = '.'
+env.DOCKER_URL = 'armdocker.rnd.ericsson.se/proj-am'
+env.PSQL_BASE_IMAGE = 'armdocker.rnd.ericsson.se/proj-am/sles/sles-pg14'
+
+
+// Sonar ENVs
+env.SONAR_PROJECT = 'com.ericsson.orchestration.mgmt:eric-am-common-wfs'
+env.SONAR_SERVER = 'SonarQubeDCE'
+
+
+// Build ENVs
+env.NAMESPACE_SUF = 'wfs-' + BUILD_NUMBER
+env.DEPENDENCY_CHART_LOCATION = 'charts/eric-am-common-dependency'
+env.APP_NAME = 'eric-eo-evnfm'
+env.SPINNNAKER_HOOK_NAME = 'eric-oss-am-common-wfs'
+env.POSTGRES_VERSION = '14'
+env.UPDATE_HELM_CHART = true
+
+
+// Kubernetes ENVs
+env.CLUSTER = 'geo35660'

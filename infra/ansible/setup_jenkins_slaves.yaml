@@ -1,0 +1,8 @@
+-
+  name: setup jenkins slaves
+  hosts: all
+  roles:
+    - setup_yum_installations
+    - setup_python_ci_flow
+    - setup_jenkins_slaves
+    - configure_java

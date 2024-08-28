@@ -1,0 +1,82 @@
+#!/usr/bin/env groovy
+
+@Library('jenkins-shared-libs')
+import static com.ericsson.orchestration.mgmt.libs.VnfmJenkins.getAgentLabel
+import static com.ericsson.orchestration.mgmt.libs.VnfmJenkins.getSeedJobName
+import static com.ericsson.orchestration.mgmt.libs.VnfmNotify.sendMail
+
+
+// Stages template
+def stages = [:]
+// Set Agent label
+String label = getAgentLabel( type: 'ews',
+                              this)
+
+
+node(label) {
+    try {
+        // Set Job's ENVs
+        env.SEED_JOB = getSeedJobName(JOB_NAME)
+        env.JOB_TYPE = 'release'
+        env.GLOBAL_VAR_PATH = 'jenkins/global.var'
+        env.VARS_DIR_PATH = 'jenkins/' + env.SEED_JOB + '/'
+        env.VAR_PATH = env.VARS_DIR_PATH + 'project.var'
+        env.SPRINT_NUMBER = params.SPRINT_NUMBER
+        env.BRANCH = env.SPRINT_NUMBER + '_track'
+
+
+        // Run Prepare Stage
+        stage('Prepare') {
+            println('INFO: Checkout CI code...')
+            checkout(scm)
+
+            println('INFO: Load Global vars...')
+            load(env.GLOBAL_VAR_PATH)
+
+            println('INFO: Load Project vars...')
+            load(env.VAR_PATH)
+
+            println('INFO: Load Stages...')
+            stages['run-job'] = load(env.RUN_JOB_STAGE)
+            stages['post'] = load(env.POST_STAGE)
+
+            // Set build description
+            currentBuild.description = '<p>Sprint: ' + env.SPRINT_NUMBER + '</p>'
+        }
+
+        def varList = [ 'UMBRELLA_APPS_VAR',
+                        'EVNFM_APPS_VAR',
+                        'OFOC_APPS_VAR']
+        for(String var in varList) {
+            String umbrellaName = var.minus('_APPS_VAR')
+
+            stage('Uplift version in ' + umbrellaName + ' applications') {
+                def stageList = [:]
+                String varPath = env.VARS_DIR_PATH + env[var]
+
+                for(Map upliftApp in readYaml(file: varPath)) {
+                    Map app = upliftApp
+                    String upliftJob = app['name'] + '_uplift-version'
+
+                    stageList[app['name']] = {
+                        // Run Uplift Job
+                        def upliftParams = []
+                        upliftParams.add( name: 'SPRINT_NUMBER',
+                                          value: env.SPRINT_NUMBER)
+                        stages['run-job'].LocalJob( name: upliftJob,
+                                                    params: upliftParams)
+                    }
+                }
+
+                parallel stageList
+            }
+        }
+
+    } catch (Exception errJob) {
+        println(errJob)
+        currentBuild.result = 'FAILURE'
+    } finally {
+        // Run Post Actions Stage
+        stages['post'].Base(status: currentBuild.result ?: 'SUCCESS')
+    }
+}

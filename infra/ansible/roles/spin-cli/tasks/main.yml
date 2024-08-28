@@ -1,0 +1,28 @@
+- name: "Check Spinnaker CLI"
+  shell: "spin --version"
+  register: spin_check
+  ignore_errors: true
+  changed_when: false
+
+- name: "Download Spinnaker CLI binary"
+  get_url:
+    url: "{{ spin_url }}/{{ spin_version }}/linux/amd64/spin"
+    dest: "/tmp/spin"
+    mode: "775"
+    force: true
+  when: spin_check.stdout == ""
+
+- name: "Install Spinnaker CLI"
+  shell: "{{ item }}"
+  with_items:
+    - "chmod +x spin"
+    - "mv spin /usr/bin/spin"
+  args:
+    warn: false
+    chdir: "/tmp"
+  when: spin_check.stdout == ""
+
+- name: "Spinnaker CLI status"
+  debug:
+    msg: "Spinnaker CLI {{ spin_check.stdout }}"
+  when: spin_check.stdout

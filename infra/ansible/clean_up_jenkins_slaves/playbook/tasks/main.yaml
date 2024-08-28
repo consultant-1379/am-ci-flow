@@ -1,0 +1,55 @@
+---
+- name: "Clean out docker images"
+  shell: docker images -a | grep '<none>\|SNAPSHOT\|proj-am' | awk '!/IMAGE/{print $3}' | xargs docker rmi
+  become: true
+  become_user: root
+  ignore_errors: yes
+- name: "Find snapshot dependencies older than 30 minutes"
+  find:
+    paths: /home/amadm100/.m2/repository
+    recurse: yes
+    patterns: '.*SNAPSHOT.*'
+    age: 1800
+    use_regex: true
+  become: true
+  become_user: root
+  register: snapshot_files
+- name: "Delete snapshot files"
+  become: true
+  become_user: root
+  file:
+    path: "{{ item.path }}"
+    state: absent
+  with_items: "{{ snapshot_files.files }}"
+- name: "Find old maven dependencies"
+  find:
+    paths: /home/amadm100/.m2/repository
+    recurse: yes
+    age: 10d
+    age_stamp: atime
+  become: true
+  become_user: root
+  register: old_files
+- name: "delete old files"
+  become: true
+  become_user: root
+  file:
+    path: "{{ item.path }}"
+    state: absent
+  with_items: "{{ old_files.files }}"
+- name: "Find tmp files older than 30 minutes"
+  find:
+    paths: /tmp
+    recurse: yes
+    age: 1800
+    use_regex: true
+  become: true
+  become_user: root
+  register: tmp_files
+- name: "Delete tmp files"
+  become: true
+  become_user: root
+  file:
+    path: "{{ item.path }}"
+    state: absent
+  with_items: "{{ tmp_files.files }}"

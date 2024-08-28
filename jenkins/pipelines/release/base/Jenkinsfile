@@ -1,0 +1,90 @@
+#!/usr/bin/env groovy
+
+@Library('jenkins-shared-libs')
+import static Boolean.parseBoolean
+import static com.ericsson.orchestration.mgmt.libs.VnfmJenkins.getAgentLabel
+import static com.ericsson.orchestration.mgmt.libs.VnfmJenkins.getSeedJobName
+
+
+// Stages template
+def stages = [:]
+// Set Agent label
+env.SEED_JOB = getSeedJobName(JOB_NAME)
+String label = getAgentLabel( type: 'release',
+                              project: env.SEED_JOB,
+                              this)
+
+
+node(label) {
+    try {
+        // Set Job's ENVs
+        env.JOB_TYPE = 'release'
+        env.GLOBAL_VAR_PATH = 'jenkins/global.var'
+        env.VAR_PATH = 'jenkins/' + env.SEED_JOB + '/project.var'
+        env.BRANCH = params.BRANCH
+        env.TYPE = params.TYPE
+        env.GERRIT_CHANGE_SUBJECT = params.GERRIT_CHANGE_SUBJECT
+
+
+        // Run Prepare Stage
+        stage('Prepare') {
+            println('INFO: Checkout CI code...')
+            checkout(scm)
+
+            println('INFO: Load Global vars...')
+            load(env.GLOBAL_VAR_PATH)
+
+            println('INFO: Load Project vars...')
+            load(env.VAR_PATH)
+
+            println('INFO: Load Stages...')
+            stages['git'] = load(env.GIT_STAGE)
+            stages['envs'] = load(env.ENVS_STAGE)
+            stages['build'] = load(env.BUILD_STAGE)
+            stages['jira'] = load(env.JIRA_STAGE)
+            stages['clean'] = load(env.CLEAN_STAGE)
+        }
+
+        // Run Checkout Project Stage
+        stages['git'].CheckoutProject(project: env.GERRIT_PROJECT,
+                                      branch: env.BRANCH)
+
+        // Run Update Job ENVs Stage
+        stages['envs'].Update(project: env.GERRIT_PROJECT,
+                              type: env.TYPE)
+
+        // Run Update POM files Stage
+        stages['build'].UpdatePOM(env.GERRIT_PROJECT)
+
+        // Run Build Stage
+        stages['build'].BuildMaven(project: env.GERRIT_PROJECT)
+
+        if(!parseBoolean(env.SKIP_RELEASE_ARTIFACT)) {
+            // Run Release Artifact Stage
+            stages['build'].ReleaseArtifact(env.GERRIT_PROJECT)
+        }
+
+        // Run Git Commit Release Stage
+        stages['git'].CommitRelease(project: env.GERRIT_PROJECT)
+
+        // Run Git Commit Snapshot Stage
+        Boolean skipSnapshot = !(env.TYPE in ['base', 'minor'])
+        stages['git'].CommitSnapshot( project: env.GERRIT_PROJECT,
+                                      skip: skipSnapshot)
+
+        // Run Push Changes Stage
+        stages['git'].PushChanges(project: env.GERRIT_PROJECT,
+                                  branch: env.BRANCH)
+
+    } catch (Exception errJob) {
+        println(errJob)
+        currentBuild.result = 'FAILURE'
+    } finally {
+        // Run Add Comment to Jira Ticket Stage
+        stages['jira'].AddJiraTicketComment(url: env.JIRA_URL,
+                                            subject: env.GERRIT_CHANGE_SUBJECT)
+
+        // Run Clean Stage
+        stages['clean'].CleanBuild()
+    }
+}

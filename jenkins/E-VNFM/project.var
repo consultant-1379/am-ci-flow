@@ -1,0 +1,63 @@
+/*******************************************************************************
+ * COPYRIGHT Ericsson 2024
+ *
+ *
+ *
+ * The copyright to the computer program(s) herein is the property of
+ *
+ * Ericsson Inc. The programs may be used and/or copied only with written
+ *
+ * permission from Ericsson Inc. or in accordance with the terms and
+ *
+ * conditions stipulated in the agreement/contract under which the
+ *
+ * program(s) have been supplied.
+ ******************************************************************************/
+// Job's name ENVs
+env.TESTNG_JOB = 'E-VNFM_TestNG'
+
+
+// GIT ENVs
+env.GERRIT_PROJECT = 'am-integration-charts'
+env.INTEGRATION_CI_CONFIG_DIR = 'honeypots/pooling/environments'
+env.UPGRADE_SITE_VALUES_OVERRIDE_FILE = 'site-values/eo/ci/override/override-site-values-appstaging-logshipper-daemonset.yaml'
+
+
+// Kubernetes ENVs
+env.IDAM_USERNAME = 'vnfm'
+env.IDAM_PASSWORD = 'Ericsson123!'
+env.CLUSTER = params.CLUSTER ?: 'hart066'
+
+
+// Build ENVs
+env.INTERNAL_TESTS_DIR = 'eric-eo-evnfm-acceptance-testware-internal'
+env.INTERNAL_TESTS_FILE = 'template-internal-tests.json'
+env.INTERNAL_TESTS_JAR = 'target/eric-eo-evnfm-acceptance-testware-internal.jar'
+env.TESTNG_LOG_NAME = 'testng_' + BUILD_NUMBER + '.log'
+
+
+// Nexus ENVs
+env.NEXUS_TESTNG_PATH = 'evnfm_storage/Jenkins/EVNFM_TestingNG/' + BUILD_NUMBER
+env.NEXUS_TESTNG_NAME = 'testng-logs_build-' + BUILD_NUMBER
+
+
+// ENM stub ENVs
+env.PATH_TO_ENM_SITE_OVERRIDE_FILE = 'site-values/eo/ci/override/override-site-values-cvnfm-enm-stub.yaml'
+env.ENM_STUB_NAME = 'cvnfm-enm-cli-stub'
+env.ENM_STUB_HELM_REPO = 'https://arm.seli.gic.ericsson.se/artifactory/proj-eo-evnfm-helm-local/'
+
+
+// DRAC ENVs
+env.PATH_TO_DRAC_SITE_OVERRIDE_FILE = 'site-values/eo/ci/override/override-site-values-cvnfm-DRAC.yaml'
+
+
+// Jira ENVs
+env.JIRA_TESTNG_PROJECT = 'EO'
+env.JIRA_TESTNG_REPORTER = 'amadm100'
+env.JIRA_TESTNG_TYPE = 'Task'
+env.JIRA_TESTNG_LABELS = ['TestNG_FAIL']
+env.JIRA_TESTNG_COMPONENT = 'EVNFM'
+env.JIRA_TESTNG_EPIC = 'EO-148071'
+env.JIRA_TESTNG_WATCHERS = ['zvoldmy',
+                            'zkarole']
+env.JIRA_TESTNG_DESCR_TEMPLATE = 'templates/jira/testng-description.txt'

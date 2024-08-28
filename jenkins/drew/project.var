@@ -1,0 +1,32 @@
+/*******************************************************************************
+ * COPYRIGHT Ericsson 2024
+ *
+ *
+ *
+ * The copyright to the computer program(s) herein is the property of
+ *
+ * Ericsson Inc. The programs may be used and/or copied only with written
+ *
+ * permission from Ericsson Inc. or in accordance with the terms and
+ *
+ * conditions stipulated in the agreement/contract under which the
+ *
+ * program(s) have been supplied.
+ ******************************************************************************/
+// GIT ENVs
+env.GERRIT_PROJECT = 'am-cvnfm-utils'
+env.DISABLE_SUBMODULES = true
+//env.GIT_COMMIT_FILES = '''drew/drew.ver'''.stripMargin()
+
+
+// Docker ENVs
+env.DOCKER_DIR = '.'
+env.DOCKER_URL = 'armdocker.rnd.ericsson.se/proj-am'
+
+
+// Build ENVs // Test vars
+env.NAMESPACE_SUF = 'drew-' + BUILD_NUMBER
+env.TESTED_SCRIPT = 'eo'
+env.TEST_DIR = 'drew'
+env.TESTS_FILE = 'drew.bats'
+env.TEST_FRAMEWORK = 'bats/bin/bats'

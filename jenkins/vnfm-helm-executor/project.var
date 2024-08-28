@@ -1,0 +1,43 @@
+/*******************************************************************************
+ * COPYRIGHT Ericsson 2024
+ *
+ *
+ *
+ * The copyright to the computer program(s) herein is the property of
+ *
+ * Ericsson Inc. The programs may be used and/or copied only with written
+ *
+ * permission from Ericsson Inc. or in accordance with the terms and
+ *
+ * conditions stipulated in the agreement/contract under which the
+ *
+ * program(s) have been supplied.
+ ******************************************************************************/
+// GIT ENVs
+env.GERRIT_PROJECT = 'eric-eo-vnfm-helm-executor'
+env.WFS_UPDATING_FILE = 'charts/eric-am-common-wfs/eric-product-info.yaml'
+env.GIT_COMMIT_FILES = '''  pom.xml \\
+                          | eric-product-info.yaml'''.stripMargin()
+
+
+// Docker ENVs
+env.DOCKER_DIR = '.'
+env.DOCKER_URL = 'armdocker.rnd.ericsson.se/proj-am'
+
+
+// Sonar ENVs
+env.SONAR_PROJECT = 'com.ericsson.orchestration.mgmt:vnfm-helm-executor'
+env.SONAR_SERVER = 'SonarQubeDCE'
+
+
+// Build ENVs
+env.NAMESPACE_SUF = 'vhe-' + BUILD_NUMBER
+env.DEPENDENCY_CHART_LOCATION = 'charts/eric-am-common-dependency'
+env.SKIP_PRERELEASE = true
+env.SKIP_HELMFILE = true
+env.SKIP_PACKAGE_CHART = true
+env.SKIP_BUILD = true
+
+
+// Kubernetes ENVs
+env.CLUSTER = 'geo35660'

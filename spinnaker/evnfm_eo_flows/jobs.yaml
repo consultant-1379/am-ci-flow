@@ -1,0 +1,59 @@
+# ERIC-OSS-AM-COMMON-WFS E2E Flow pipeline
+- name: "eric-oss-am-common-wfs-E2E-Flow"
+  project: "evnfm-e2e-cicd"
+  template: "eo_pipeline_evnfm"
+  configs:
+    limitConcurrent: false
+    triggers:
+      - type: "webhook"
+        source: "eric-oss-am-common-wfs"
+        enabled: true
+# ERIC-OSS-AM-COMMON-WFS-UI E2E Flow pipeline
+- name: "eric-oss-am-common-wfs-ui-E2E-Flow"
+  project: "evnfm-e2e-cicd"
+  template: "eo_pipeline_evnfm"
+  configs:
+    limitConcurrent: false
+    triggers:
+      - type: "webhook"
+        source: "eric-oss-am-common-wfs-ui"
+        enabled: true
+# ERIC-OSS-VNFM-ORCHESTRATOR-SERVICE E2E Flow pipeline
+- name: "eric-oss-vnfm-orchestrator-service-E2E-Flow"
+  project: "evnfm-e2e-cicd"
+  template: "eo_pipeline_evnfm"
+  configs:
+    limitConcurrent: false
+    triggers:
+      - type: "webhook"
+        source: "eric-oss-vnfm-orchestrator-service"
+        enabled: true
+# EVNFM-release E2E Flow pipeline
+- name: "EVNFM-release-E2E-Flow"
+  project: "evnfm-e2e-cicd"
+  template: "staging_release"
+  configs:
+    limitConcurrent: false
+    triggers:
+      - type: "webhook"
+        source: "submit-EVNFM-chart-reviews"
+        enabled: true
+# EVNFM Functional Testing pipeline
+- name: "EVNFM_Functional_Testing"
+  project: "evnfm-e2e-cicd"
+  template: "functional_testing"
+  configs:
+    limitConcurrent: false
+# EVNFM Baseline Staging pipeline
+- name: "EVNFM_Baseline_Staging"
+  project: "evnfm-e2e-cicd"
+  template: "baseline_staging"
+  configs:
+    keepWaitingPipelines: true
+    limitConcurrent: false
+    notifications:
+      - type: "email"
+        address: "pdlecmciec@pdl.internal.ericsson.com"
+        level: "pipeline"
+        when:
+          - "pipeline.failed"

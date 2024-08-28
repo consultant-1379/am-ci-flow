@@ -1,0 +1,72 @@
+#!/usr/bin/env groovy
+
+@Library('jenkins-shared-libs')
+import static com.ericsson.orchestration.mgmt.libs.VnfmJenkins.getAgentLabel
+import static com.ericsson.orchestration.mgmt.libs.VnfmJenkins.getSeedJobName
+
+
+// Stages template
+def stages = [:]
+// Set Agent label
+env.SEED_JOB = getSeedJobName(JOB_NAME)
+String label = getAgentLabel( type: 'unit-tests',
+                              project: env.SEED_JOB,
+                              this)
+
+
+node(label) {
+    try {
+        // Set Job's ENVs
+        env.JOB_TYPE = 'gerrit'
+        env.GLOBAL_VAR_PATH = 'jenkins/global.var'
+        env.VAR_PATH = 'jenkins/' + env.SEED_JOB + '/project.var'
+        env.GERRIT_BRANCH = env.GERRIT_BRANCH ?: 'master'
+        env.GERRIT_REFSPEC = env.GERRIT_REFSPEC ?: 'refs/heads/master'
+
+
+        // Run Prepare Stage
+        stage('Prepare') {
+            println('INFO: Checkout CI code...')
+            checkout(scm)
+
+            println('INFO: Load Global vars...')
+            load(env.GLOBAL_VAR_PATH)
+
+            println('INFO: Load Project vars...')
+            load(env.VAR_PATH)
+
+            println('INFO: Load Stages...')
+            stages['git'] = load(env.GIT_STAGE)
+            stages['unit-tests'] = load(env.UNIT_TESTS_STAGE)
+            stages['clean'] = load(env.CLEAN_STAGE)
+        }
+
+        // Run Checkout Project Stage
+        stages['git'].CheckoutProject(project: env.GERRIT_PROJECT,
+                                      branch: env.GERRIT_BRANCH,
+                                      refspec: env.GERRIT_REFSPEC,
+                                      type: 'change')
+
+        // Run Bash Shell Tests Check
+        catchError(buildResult: 'UNSTABLE', stageResult: 'FAILURE') {
+            stages['unit-tests'].BashShellCheckTests(project: env.GERRIT_PROJECT)
+        }
+
+        // Run Bash Call Graph Tests Stage
+        catchError(buildResult: 'UNSTABLE', stageResult: 'FAILURE') {
+            stages['unit-tests'].BashCallGrapgTests(project: env.GERRIT_PROJECT)
+        }
+
+        // Run Bash Unit Tests Stage
+        catchError(buildResult: 'UNSTABLE', stageResult: 'FAILURE') {
+            stages['unit-tests'].BashUnitTests(project: env.GERRIT_PROJECT)
+        }
+
+    } catch (Exception errJob) {
+        println(errJob)
+        currentBuild.result = 'FAILURE'
+    } finally {
+        // Run Clean Stage
+        stages['clean'].CleanBuild()
+    }
+}

@@ -1,0 +1,62 @@
+- name: "Update Docker config file"
+  template:
+    src: "daemon.json.j2"
+    dest: "/etc/docker/daemon.json"
+    owner: "root"
+    group: "root"
+    mode: "0644"
+  tags:
+    - never
+    - config
+
+- name: "Restart Docker service"
+  shell: "{{ item }}"
+  with_items:
+    - "systemctl daemon-reload"
+    - "systemctl restart docker"
+  args:
+    warn: false
+  tags:
+    - never
+    - config
+
+- name: "Check Docker status"
+  shell: "systemctl is-active docker"
+  register: docker_check
+  ignore_errors: true
+  no_log: true
+  changed_when: false
+  tags:
+    - never
+    - config
+    - pull
+
+- name: "Check Docker enable"
+  shell: "systemctl is-enabled docker"
+  register: docker_enable
+  ignore_errors: true
+  no_log: true
+  changed_when: false
+  tags:
+    - never
+    - config
+    - pull
+
+- name: "Docker status"
+  debug:
+    msg: "Status: {{ docker_check.stdout }}; Enable: {{ docker_enable.stdout }}"
+  tags:
+    - never
+    - config
+    - pull
+
+- name: "Pull custom image"
+  shell: "{{ item }}"
+  with_items:
+    - "docker pull {{ docker_host }}/{{ custom_image }}"
+    - "docker tag {{ docker_host }}/{{ custom_image }} {{ custom_image }}"
+  args:
+    warn: false
+  tags:
+    - never
+    - pull

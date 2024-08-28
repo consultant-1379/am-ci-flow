@@ -1,0 +1,181 @@
+#
+# COPYRIGHT Ericsson 2024
+#
+#
+#
+# The copyright to the computer program(s) herein is the property of
+#
+# Ericsson Inc. The programs may be used and/or copied only with written
+#
+# permission from Ericsson Inc. or in accordance with the terms and
+#
+# conditions stipulated in the agreement/contract under which the
+#
+# program(s) have been supplied.
+#
+
+# Main seed Job
+main:
+  name: 'main'
+  dslPath: 'jenkins/main.groovy'
+  enable: true
+# ADP seed Job
+adp:
+  name: "adp"
+  dslPath: "jenkins/adp/*.groovy"
+  enable: true
+# AM-CI-FLOW seed Job
+am-ci-flow:
+  name: 'am-ci-flow'
+  dslPath: 'jenkins/am-ci-flow/*.groovy'
+  enable: true
+# AM-COMMON-WFS seed Job
+am-common-wfs:
+  name: 'am-common-wfs'
+  dslPath: 'jenkins/am-common-wfs/*.groovy'
+  enable: true
+# AM-COMMON-WFS-UI seed Job
+am-common-wfs-ui:
+  name: 'am-common-wfs-ui'
+  dslPath: 'jenkins/am-common-wfs-ui/*.groovy'
+  enable: true
+# AM-ONBOARDING-SERVICE seed Job
+am-onboarding-service:
+  name: 'am-onboarding-service'
+  dslPath: 'jenkins/am-onboarding-service/*.groovy'
+  enable: true
+# AM-PACKAGE-MANAGER seed Job
+am-package-manager:
+  name: 'am-package-manager'
+  dslPath: 'jenkins/am-package-manager/*.groovy'
+  enable: true
+# AM-SANDBOX seed Job
+am-sandbox:
+  name: 'am-sandbox'
+  dslPath: 'jenkins/am-sandbox/*.groovy'
+  enable: true
+# AM-SHARED-UTILITIES seed Job
+am-shared-utilities:
+  name: 'am-shared-utilities'
+  dslPath: 'jenkins/am-shared-utilities/*.groovy'
+  enable: true
+# BATCH-MANAGER seed Job
+batch-manager:
+  name: 'batch-manager'
+  dslPath: 'jenkins/batch-manager/*.groovy'
+  enable: true
+# CVNFM-ENM-CLI-STUB seed Job
+cvnfm-enm-cli-stub:
+  name: 'cvnfm-enm-cli-stub'
+  dslPath: 'jenkins/cvnfm-enm-cli-stub/*.groovy'
+  enable: true
+# CVNFMCTL seed Job
+cvnfmctl:
+  name: 'cvnfmctl'
+  dslPath: 'jenkins/cvnfmctl/*.groovy'
+  enable: true
+# DREW seed Job
+drew:
+  name: 'drew'
+  dslPath: 'jenkins/drew/*.groovy'
+  enable: true
+# ERIC-EO-EVNFM seed Job
+eric-eo-evnfm:
+  name: 'eric-eo-evnfm'
+  dslPath: 'jenkins/eric-eo-evnfm/*.groovy'
+  enable: true
+# ERIC-EO-EVNFM-CRYPTO seed Job
+eric-eo-evnfm-crypto:
+  name: 'eric-eo-evnfm-crypto'
+  dslPath: 'jenkins/eric-eo-evnfm-crypto/*.groovy'
+  enable: true
+# ERIC-EO-EVNFM-LIBRARY-CHART seed Job
+eric-eo-evnfm-library-chart:
+  name: 'eric-eo-evnfm-library-chart'
+  dslPath: 'jenkins/eric-eo-evnfm-library-chart/*.groovy'
+  enable: true
+# ERIC-EO-EVNFM-NBI seed Job
+eric-eo-evnfm-nbi:
+  name: 'eo-evnfm-nbi-service'
+  dslPath: 'jenkins/eo-evnfm-nbi-service/*.groovy'
+  enable: true
+# ERIC-EO-LM-CONSUMER seed Job
+eric-eo-lm-consumer:
+  name: 'eric-eo-lm-consumer'
+  dslPath: 'jenkins/eric-eo-lm-consumer/*.groovy'
+  enable: true
+# ERIC-FUNCTION-ORCHESTRATION seed Job
+eric-function-orchestration:
+  name: 'eric-function-orchestration'
+  dslPath: 'jenkins/eric-function-orchestration/*.groovy'
+  enable: true
+# EVENT-TO-FI seed Job
+event-to-fi:
+  name: 'event-to-fi'
+  dslPath: 'jenkins/event-to-fi/*.groovy'
+  enable: true
+# E-VNFM seed Job
+evnfm:
+  name: 'E-VNFM'
+  dslPath: 'jenkins/E-VNFM/*.groovy'
+  enable: true
+# EVNFM-RBAC seed Job
+evnfm-rbac:
+  name: 'evnfm-rbac'
+  dslPath: 'jenkins/evnfm-rbac/*.groovy'
+  enable: true
+# E-VNFM Test seed Job
+evnfm-test:
+  name: 'E-VNFM_test'
+  dslPath: 'jenkins/evnfm-test/*.groovy'
+  enable: true
+# GR-CONTROLLER seed Job
+gr-controller:
+  name: 'gr-controller'
+  dslPath: 'jenkins/gr-controller/*.groovy'
+  enable: true
+# JENKINS-SHARED-LIBS seed Job
+jenkins-shared-libs:
+  name: 'jenkins-shared-libs'
+  dslPath: 'jenkins/jenkins-shared-libs/*.groovy'
+  enable: true
+# MASTER seed Job
+master:
+  name: 'master'
+  dslPath: 'jenkins/master/*.groovy'
+  enable: true
+# Security seed Job
+security:
+  name: 'security'
+  dslPath: 'jenkins/security/*.groovy'
+  enable: true
+# Services seed Job
+services:
+  name: 'services'
+  dslPath: 'jenkins/services/*.groovy'
+  enable: true
+# SIGNATURE-VALIDATION-LIB seed Job
+signature-validation-lib:
+  name: 'signature-validation-lib'
+  dslPath: 'jenkins/signature-validation-lib/*.groovy'
+  enable: true
+# TOOLS seed Job
+tools:
+  name: 'tools'
+  dslPath: 'jenkins/tools/*.groovy'
+  enable: true
+# VNFM-HELM-EXECUTOR seed Job
+vnfm-helm-executor:
+  name: 'vnfm-helm-executor'
+  dslPath: 'jenkins/vnfm-helm-executor/*.groovy'
+  enable: true
+# VNFM-ORCHESTRATOR seed Job
+vnfm-orchestrator:
+  name: 'vnfm-orchestrator'
+  dslPath: 'jenkins/vnfm-orchestrator/*.groovy'
+  enable: true
+# VNFSDK-PKGTOOLS seed Job
+vnfsdk-pkgtools:
+  name: 'vnfsdk-pkgtools'
+  dslPath: 'jenkins/vnfsdk-pkgtools/*.groovy'
+  enable: true

@@ -1,0 +1,40 @@
+/*******************************************************************************
+ * COPYRIGHT Ericsson 2024
+ *
+ *
+ *
+ * The copyright to the computer program(s) herein is the property of
+ *
+ * Ericsson Inc. The programs may be used and/or copied only with written
+ *
+ * permission from Ericsson Inc. or in accordance with the terms and
+ *
+ * conditions stipulated in the agreement/contract under which the
+ *
+ * program(s) have been supplied.
+ ******************************************************************************/
+// Job's name ENVs
+env.RELEASE_JOB = 'eo-evnfm-nbi-service_release-flow'
+
+
+// GIT ENVs
+env.GERRIT_PROJECT = 'eric-eo-evnfm-sol-agent'
+env.GIT_COMMIT_FILES = '''  pom.xml \\
+                          | eric-eo-evnfm-nbi-*/pom.xml \\
+                          | eric-eo-vm-vnfm/pom.xml'''.stripMargin()
+
+
+// Docker ENVs
+env.DOCKER_DIR = 'eric-eo-evnfm-nbi-server'
+env.DOCKER_URL = 'armdocker.rnd.ericsson.se/proj-am'
+
+
+// Sonar ENVs
+env.SONAR_PROJECT = 'com.ericsson.orchestration.mgmt:eric-eo-evnfm-sol-agent'
+env.SONAR_SERVER = 'SonarQubeDCE'
+
+
+// Build ENVs
+env.NAMESPACE_SUF = 'nbi-' + BUILD_NUMBER
+env.APP_NAME = 'eric-oss-function-orchestration-common'
+env.SPINNNAKER_HOOK_NAME = 'evnfm-nbi-service'

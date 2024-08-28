@@ -1,0 +1,44 @@
+#
+# COPYRIGHT Ericsson 2024
+#
+#
+#
+# The copyright to the computer program(s) herein is the property of
+#
+# Ericsson Inc. The programs may be used and/or copied only with written
+#
+# permission from Ericsson Inc. or in accordance with the terms and
+#
+# conditions stipulated in the agreement/contract under which the
+#
+# program(s) have been supplied.
+#
+
+- name: "eric-eo-batch-manager"
+  project: "eric-eo-batch-manager"
+  branch: "master"
+  file: "charts/eric-eo-batch-manager/Chart.yaml"
+- name: "eric-eo-evnfm-nbi"
+  project: "eric-eo-evnfm-sol-agent"
+  branch: "master"
+  file: "charts/eric-eo-evnfm-nbi/Chart.yaml"
+- name: "eric-eo-evnfm-crypto"
+  project: "eric-eo-evnfm-crypto"
+  branch: "master"
+  file: "charts/eric-eo-evnfm-crypto/Chart.yaml"
+- name: "eric-eo-fh-event-to-alarm-adapter"
+  project: "eric-eo-fh-event-to-alarm-adapter"
+  branch: "master"
+  file: "charts/eric-eo-fh-event-to-alarm-adapter/Chart.yaml"
+- name: "eric-eo-lm-consumer"
+  project: "eric-eo-lm-consumer"
+  branch: "master"
+  file: "charts/eric-eo-lm-consumer/Chart.yaml"
+- name: "eric-am-onboarding-service"
+  project: "am-onboarding-service"
+  branch: "master"
+  file: "charts/eric-am-onboarding-service/Chart.yaml"
+- name: "eric-evnfm-rbac"
+  project: "evnfm-rbac"
+  branch: "master"
+  file: "charts/eric-evnfm-rbac/Chart.yaml"

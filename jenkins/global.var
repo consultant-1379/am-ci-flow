@@ -1,0 +1,235 @@
+/*******************************************************************************
+ * COPYRIGHT Ericsson 2024
+ *
+ *
+ *
+ * The copyright to the computer program(s) herein is the property of
+ *
+ * Ericsson Inc. The programs may be used and/or copied only with written
+ *
+ * permission from Ericsson Inc. or in accordance with the terms and
+ *
+ * conditions stipulated in the agreement/contract under which the
+ *
+ * program(s) have been supplied.
+ ******************************************************************************/
+// Stage Path ENVs
+env.BUILD_STAGE = "${WORKSPACE}/jenkins/stages/Build_Stage.groovy"
+env.CLEAN_STAGE = "${WORKSPACE}/jenkins/stages/Clean_Stage.groovy"
+env.CONFIG_STAGE = "${WORKSPACE}/jenkins/stages/Config_Stage.groovy"
+env.DEPLOY_APP_STAGE = "${WORKSPACE}/jenkins/stages/Deploy-App_Stage.groovy"
+env.DOCKER_STAGE = "${WORKSPACE}/jenkins/stages/Docker_Stage.groovy"
+env.ENVS_STAGE = "${WORKSPACE}/jenkins/stages/ENVs_Stage.groovy"
+env.GIT_STAGE = "${WORKSPACE}/jenkins/stages/GIT_Stage.groovy"
+env.HELM_STAGE = "${WORKSPACE}/jenkins/stages/Helm_Stage.groovy"
+env.JOBS_STAGE = "${WORKSPACE}/jenkins/stages/Jobs_Stage.groovy"
+env.K8S_STAGE = "${WORKSPACE}/jenkins/stages/K8S_Stage.groovy"
+env.POST_STAGE = "${WORKSPACE}/jenkins/stages/Post_Stage.groovy"
+env.QUALITY_TESTS_STAGE = "${WORKSPACE}/jenkins/stages/Quality-Tests_Stage.groovy"
+env.RUN_JOB_STAGE = "${WORKSPACE}/jenkins/stages/Run-Job_Stage.groovy"
+env.SONAR_STAGE = "${WORKSPACE}/jenkins/stages/Sonar_Stage.groovy"
+env.UA_TESTS_STAGE = "${WORKSPACE}/jenkins/stages/UA-Tests_Stage.groovy"
+env.UNIT_TESTS_STAGE = "${WORKSPACE}/jenkins/stages/Unit-Tests_Stage.groovy"
+env.JIRA_STAGE = "${WORKSPACE}/jenkins/stages/Jira_Stage.groovy"
+env.ANSIBLE_STAGE = "${WORKSPACE}/jenkins/stages/Ansible_Stage.groovy"
+
+
+// Job Name ENVs
+env.EVNFM_PRE_RELEASE_JOB = 'E-VNFM_pre-release'
+env.HELMFILE_DEPLOY_JOB = 'E-VNFM_Helmfile-Deploy'
+env.HELMFILE_RELEASE_JOB = 'E-VNFM_Helmfile-Release'
+env.UNLOCK_JOB = 'E-VNFM_Unlock-Environment'
+env.UNRESERVE_JOB = 'tools_unlock-resource'
+env.RESERVE_ENV_JOB = 'tools_lock-resource'
+env.UPLIFT_CHILD_CHART_JOB = 'tools_uplift-child-chart'
+env.HA_ROBUSTNESS_TESTS_JOB = 'E-VNFM_test_HA-robustness-tests'
+env.HA_DEPLOY_JOB = 'E-VNFM_test_HA-deploy'
+env.GR_DEPLOY_JOB = 'gr-controller_deploy'
+env.DR_CHECK_JOB = 'tools_dr-check'
+env.ADP_UNRESERVE_JOB = 'fem5s11:EO-Integration-Unreserve-Environment'
+env.ADP_GET_HELMFILE_JOB = 'fem5s11:Get-Latest-ChartOrHelmfile'
+env.ADP_FETCH_UPLOAD_JOB = 'fem5s11:OSS-CI-Fetch-Build-Upload'
+env.ADP_HELMFILE_FBU_JOB = 'fem5s11:OSS-Integration-Fetch-Build-Upload-Using-ADP-Inca'
+env.ADP_RESERVE_ENV_JOB = 'fem5s11:EVNFM-Reserve_Namespace'
+env.ADP_CREATE_NAMESPACE_JOB = 'fem5s11:Create_Namespace'
+env.ADP_HELMFILE_DEPLOY_JOB = 'fem5s11:EO-Integration-Helmfile-Deploy'
+env.ADP_TEST_HELMFILE_DEPLOY_JOB = 'fem5s11:CI-Test-EO-Integration-Helmfile-Deploy'
+env.ADP_CHART_RELEASE = 'fem8s11:Helm-Chart-Release'
+env.GET_CHART_VERSION_JOB = 'tools_get-chart-version'
+
+
+// Job Params ENVs
+env.ADP_GET_HELMFILE_PARAMS = '''INT_CHART_NAME=eric-eo-helmfile
+                                |INT_CHART_VERSION=0.0.0
+                                |INT_CHART_REPO=https://arm.seli.gic.ericsson.se/artifactory/proj-eo-drop-helm'''.stripMargin()
+env.ADP_FETCH_UPLOAD_PARAMS = '''GERRIT_USER_SECRET=ossapps100-user-creds
+                                |ARMDOCKER_USER_SECRET=ossapps100-arm-docker-auth-config
+                                |WAIT_SUBMITTABLE_BEFORE_PUBLISH=false
+                                |CI_HELM=true
+                                |HELM_REPO_API_TOKEN=eo-helm-repo-api-token
+                                |HELM_REPO_CREDENTIALS_ID=ossapps100_helm_repository_creds_file'''.stripMargin()
+env.ADP_HELMFILE_FBU_PARAMS = '''GERRIT_USER_SECRET=cloudman-user-creds
+                                |GERRIT_REFSPEC=
+                                |GIT_REPO_URL=https://gerrit-gamma.gic.ericsson.se/a/OSS/com.ericsson.oss.eo/eo-helmfile.git
+                                |HELM_INTERNAL_REPO=https://arm.epk.ericsson.se/artifactory/proj-eo-snapshot-helm
+                                |HELM_DROP_REPO=https://arm.epk.ericsson.se/artifactory/proj-eo-drop-helm
+                                |ARMDOCKER_USER_SECRET=cloudman-docker-auth-config
+                                |ALWAYS_RELEASE=false
+                                |AUTOMATIC_RELEASE=true
+                                |CHART_PATH=helmfile
+                                |CHECK_PUBLISHED=false
+                                |HELM_REPO_CREDENTIALS_ID=eoadm100_helm_repository_creds
+                                |STATE_VALUES_FILE=.bob/tmp_repo/testsuite/helm-chart-validator/site_values.yaml
+                                |VERSION_STEP_STRATEGY_DEPENDENCY=PATCH
+                                |VERSION_STEP_STRATEGY_MANUAL=PATCH'''.stripMargin()
+env.ADP_HELMFILE_DEPLOY_PARAMS = '''ARMDOCKER_USER_SECRET=cloudman-docker-auth-config
+                                    |CRD_RELEASE=eric-tm-ingress-controller-cr-crd
+                                    |CRD_NAMESPACE=eric-crd-ns
+                                    |SKIP_CRD_DEPLOY=false
+                                    |HELM_REGISTRY_DEPLOY=true
+                                    |HELM_TIMEOUT=1800
+                                    |SLAVE_LABEL=evo_docker_engine_gic
+                                    |VERBOSITY=4'''.stripMargin()
+env.ADP_CHART_RELEASE_PARAMS = '''WAIT_SUBMITTABLE_BEFORE_PUBLISH=false
+                                  |ARMDOCKER_USER_SECRET=ossapps100-arm-docker-auth-config
+                                  |GERRIT_PREPARE_OR_PUBLISH=publish
+                                  |ALLOW_DOWNGRADE=false
+                                  |AUTOMATIC_RELEASE=false
+                                  |GERRIT_USER_SECRET=ossapps100-user-creds
+                                  |CI_HELM=true
+                                  |HELM_REPO_API_TOKEN=eo-helm-repo-api-token
+                                  |HELM_DROP_REPO=https://arm.seli.gic.ericsson.se/artifactory/proj-eo-evnfm-drop-helm
+                                  |HELM_REPO_CREDENTIALS_ID=ossapps100_helm_repository_creds_file
+                                  |HELM_RELEASED_REPO=https://arm.seli.gic.ericsson.se/artifactory/proj-eo-evnfm-drop-helm
+                                  |HELM_INTERNAL_REPO=https://arm.seli.gic.ericsson.se/artifactory/proj-eo-evnfm-snapshot-helm-local'''.stripMargin()
+
+
+// Git ENVs
+env.GERRIT_URL = 'https://gerrit-gamma.gic.ericsson.se'
+env.GIT_EMAIL = 'you@example.com'
+env.GIT_USERNAME = 'Jenkins User'
+env.OSS_CI_PROJECT = 'oss-integration-ci'
+env.OSS_CI_BRANCH = 'master'
+env.INTEGRATION_CI_PROJECT = 'eo-integration-ci'
+env.INTEGRATION_CI_BRANCH = 'master'
+env.INTEGRATION_CI_CONFIG_DIR = 'honeypots/pooling/environments'
+env.EO_HELMFILE_PROJECT = 'eo-helmfile'
+env.EO_HELMFILE_BRANCH = 'master'
+env.ROBUSTNESS_PROJECT = 'eocm-app-robustness'
+env.ROBUSTNESS_BRANCH = 'feature/vnfm'
+env.CHANGE_MESSAGE = 'JENKINS-' + BUILD_NUMBER + ' - Update _PROJECT_NAME_ version to _version_'
+env.DISABLE_SUBMODULES = true
+env.DEPLOYMENT_MANAGER_DOCKER_IMAGE = 'armdocker.rnd.ericsson.se/proj-eric-oss-drop/eric-oss-deployment-manager:default'
+env.FULL_PATH_TO_SITE_VALUES_FILE = 'site-values/eo/ci/template/site-values-latest.yaml'
+env.BASE_OVERRIDE_FILE = 'site-values/eo/ci/override/override-site-values-appstaging.yaml'
+env.GR_BASE_OVERRIDE_FILE = 'site-values/eo/ci/override/gr/gr-base.yaml'
+env.OFOC_GERRIT_PROJECT = 'eric-oss-function-orchestration-common'
+env.OFOC_GERRIT_BRANCH = 'master'
+env.WFS_GERRIT_PROJECT = 'am-common-wfs'
+env.WFS_GERRIT_BRANCH = 'master'
+
+
+// LDAP ENVs
+env.LDAP_HOST = 'ericsson.se'
+
+
+// Jira ENVs
+env.JIRA_URL = 'https://eteamproject.internal.ericsson.com'
+env.WIKI_URL = 'https://eteamspace.internal.ericsson.com'
+
+
+// Docker ENVs
+env.PSQL_BASE_IMAGE = 'armdocker.rnd.ericsson.se/proj-am/sles/sles-pg14'
+env.KUBECTL_BASE_IMAGE = 'armdocker.rnd.ericsson.se/proj-am/sles/sles-kubectl'
+
+
+// Helm ENVs
+env.GLOBAL_HELM_FOLDER = 'helm-target'
+env.HELM_RELEASE_URL = 'https://arm.seli.gic.ericsson.se/artifactory/proj-eo-evnfm-helm'
+env.HELM_SNAPSHOT_URL = 'https://arm.seli.gic.ericsson.se/artifactory/proj-am-helm-local/snapshots'
+env.DESIGN_RULES_FILE = 'charts/exclude_rules'
+env.IMAGE_DESIGN_RULES_FILE = 'charts/image_exclude_rules'
+env.HELM_ARGS_FILE = 'charts/helm_args'
+env.OFOC_CHART_FILE_PATH = 'charts/eric-oss-function-orchestration-common/Chart.yaml'
+env.WFS_CHART_NAME = 'eric-am-common-wfs'
+env.HELMFILE_CHART_NAME = 'eric-eo-helmfile'
+env.RELEASE_HELMFILE_REPO = 'https://arm.seli.gic.ericsson.se/artifactory/proj-eo-drop-helm'
+
+
+// Kubernetes ENVs
+env.CLUSTER = 'geo35660'
+env.NAMESPACE_LABEL = 'source=jenkins'
+env.ICCR = true
+env.INGRESS_TYPE = env.ICCR.toBoolean() ? 'iccr' : 'eo_iccr'
+env.DEPLOY_USER = 'vnfm'
+env.DEPLOY_PASSWORD = 'ciTesting123!'
+env.IDAM_USERNAME = 'admin'
+env.GAS_USERNAME = 'gasuser'
+env.SFTP_USERNAME = 'broAdmin'
+env.PG_USERNAME = 'admin'
+env.PG_PASSWORD = 'test-pw'
+env.HELM_REGISTRY_USER = 'admin'
+env.HELM_REGISTRY_PASSWORD = 'Q86WKDhsvk'
+env.IAM_USERS_SECRET = 'eric-sec-access-mgmt-creds'
+env.IAM_CACERT_SECRET = 'iam-cacert-secret'
+env.IAM_TLS_SECRET = 'iam-tls-secret'
+env.REGISTRY_TLS_SECRET = 'registry-tls-secret'
+env.VNFM_TLS_SECRET = 'vnfm-tls-secret'
+env.HELM_TLS_SECRET = 'helm-tls-secret'
+env.GAS_TLS_SECRET = 'gas-tls-secret'
+env.CONTAINER_REGISTRY_SECRET = 'container-registry-users-secret'
+env.IAM_ONBOARDING_SECRET = 'eric-evnfm-rbac-default-user'
+env.DOCKER_SERVER = 'armdocker.rnd.ericsson.se'
+env.DOCKER_SERVER_SW = 'selndocker.mo.sw.ericsson.se'
+env.DOCKER_REGISTRY_SECRET = 'docker-registry-secret'
+env.WFS_REGISTRY_SECRET = 'wfs-registry-secret'
+env.CONTAINER_REGISTRY_CREDENTIALS_SECRET = 'container-credentials'
+env.HELM_REGISTRY_CREDENTIALS_SECRET = 'helm-chart-registry-credentials'
+env.KUBECTL_VERSION = 'v1.24.2'
+env.VNFM_USER = 'vnfm'
+env.VNFM_PASSWORD = 'Ericsson123!'
+
+
+// Build ENVs
+env.CERT_DIR = 'certs'
+env.CC_EMAIL = 'PDLCVNFMAL@pdl.internal.ericsson.com'
+env.SSL_SAMPLE = 'templates/ssl/template.conf'
+env.DOCKER_CONFIG = "${WORKSPACE}/docker-config"
+env.POSTGRES_VERSION = '14'
+env.UPDATE_HELM_CHART = false
+env.ARTIFACTS_DIR = 'Artifacts'
+env.POINTFIX_ENV_LABEL = 'evnfm-prerelease'
+env.POM_FILE = 'pom.xml'
+env.SKIP_UA_TESTS = false
+env.SKIP_CHECK_STYLE = false
+env.SKIP_UNIT_TESTS = false
+env.SKIP_CONTRACTS_TESTS = true
+env.SKIP_E2E_TESTS = true
+env.SKIP_BUILD_IMAGE_TEST = true
+env.SKIP_PRERELEASE = false
+env.SKIP_HELMFILE = false
+env.SKIP_POST_MERGE = false
+env.SKIP_RELEASE_ARTIFACT = false
+env.SKIP_PACKAGE_CHART = false
+env.SKIP_DR_CHECK = false
+env.SKIP_VALIDATE_CHART_SCHEMA = true
+env.SKIP_CONTAINERS_RESTART_TESTS = true
+env.SKIP_SONAR_TESTS = false
+env.SKIP_BUILD = false
+
+
+// Nexus ENVs
+env.NEXUS_URL = 'https://arm1s11-eiffel052.eiffel.gic.ericsson.se:8443/nexus'
+env.NEXUS_PATH = 'evnfm_storage/Jenkins'
+env.NEXUS_DESIGN_REPORT_PATH = 'evnfm_storage/Jenkins/design_rules_reports'
+
+
+// Spinnaker ENVs
+env.SPINNAKER_ENDPOINT = 'https://spinnaker-api.rnd.gic.ericsson.se'
+env.SPINNAKER_EVNFM_PATH = 'evnfm_eo_flows'
+env.SPINNAKER_OFOC_PATH = 'ofoc_eo_flows'
+env.SPINNAKER_GR_PATH = 'gr_flows'
+
+
+// Sonar ENVs
+env.SONAR_SERVER = 'SonarQubeDCE'

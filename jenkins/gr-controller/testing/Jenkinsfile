@@ -1,0 +1,52 @@
+#!/usr/bin/env groovy
+
+@Library('jenkins-shared-libs')
+import static com.ericsson.orchestration.mgmt.libs.VnfmJenkins.getAgentLabel
+import static com.ericsson.orchestration.mgmt.libs.VnfmJenkins.getSeedJobName
+
+
+// Stages template
+def stages = [:]
+// Set Agent label
+String label = getAgentLabel( type: 'gerrit',
+                              this)
+
+
+node(label) {
+    try {
+        // Set Job's ENVs
+        env.SEED_JOB = getSeedJobName(JOB_NAME)
+        env.JOB_TYPE = 'gerrit'
+        env.GLOBAL_VAR_PATH = 'jenkins/global.var'
+        env.VAR_PATH = 'jenkins/' + env.SEED_JOB + '/project.var'
+        env.CLUSTER = params.CLUSTER
+        env.NAMESPACE = params.NAMESPACE
+
+
+        // Run Prepare Stage
+        stage('Prepare') {
+            println('INFO: Checkout CI code...')
+            checkout(scm)
+
+            println('INFO: Load Global vars...')
+            load(env.GLOBAL_VAR_PATH)
+
+            println('INFO: Load Project vars...')
+            load(env.VAR_PATH)
+
+            println('INFO: Load Stages...')
+            stages['ua-tests'] = load(env.UA_TESTS_STAGE)
+            stages['clean'] = load(env.CLEAN_STAGE)
+        }
+
+        // Run Internal Tests Stage
+        stages['ua-tests'].InternalTestsGR(name: env.GERRIT_PROJECT)
+
+    } catch (Exception errJob) {
+        println(errJob)
+        currentBuild.result = 'FAILURE'
+    } finally {
+        // Run Clean Stage
+        stages['clean'].CleanBuild()
+    }
+}

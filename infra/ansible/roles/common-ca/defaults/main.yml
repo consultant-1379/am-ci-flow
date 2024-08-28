@@ -1,0 +1,56 @@
+ca_crt_path_RedHat: "/etc/pki/ca-trust/source/anchors/"
+ca_crt_path_SuSe: "/etc/pki/trust/anchors/"
+
+CA_key: |
+          -----BEGIN PRIVATE KEY-----
+          MIIEvwIBADANBgkqhkiG9w0BAQEFAASCBKkwggSlAgEAAoIBAQDMJBdwN4EDvF8C
+          WPzgvjabZqVS3ftaUzolSqEGD7yvlY0j2ai7w/5+Y+YOJ5rgpHqDyDZ+ntvSbGdj
+          HrpnE9Tx0CcPXmHe+MSxqrOEqx1cbLLi80MxPjujdId2cup22aPdcXhh71+isVuY
+          zHpzdRE4/LKabN8AnPfv1bruRax31O49dIbAq+RUj4cYMEZCcZNid316rwsvymzw
+          NpbFRlsABfimwZV/2PPhBoWxGqk5mCz93pYnronQKLar9FtttRUQAxI5R5y2wLfL
+          WfrgpwGwd6XEN1aZJX/CYx/3QHZ+t1oe/fBcHpnzEVtdMMM3filgIJSeSVO0tIq8
+          /nzAAiLdAgMBAAECggEBAIcgmNcyFldXuHhAWVuW7WSeZG7e+4OFteZ7aO0vO5Hq
+          Z5vEdxmbGfmlvOG/u5hZp7NVsyTLmOzHzwPgkjiq+vj59PEKY7SJbQHB4cS+09eb
+          KCpsJh0Reb6v4v84ABWd6QcrFimVnvN9fQk+yQtmAXl8Y+kuicrJHKGIE42nVwuW
+          GxKpB3Ys7h881uGT/YAZc01UNVoGtBtE/VnHfILEFcFHZbuCnz899sI6p+yiXho8
+          Gv7WjW73zNxBo0J1syF8B5Kt37OTBe2z29jZ7BPPhxJBIDF7RkROcXB4YZmRB35H
+          qkD4LC3XO92S7tccJvXgvp4KOfCnZItuWuSAUkRfu80CgYEA7sVl58NVc1rbvrBd
+          kx1mlGzatam5rJjQCw5aqQOH6pWfk4gxKxlBZnH0cz0yzRvyx2ApERtuyrW7aV5k
+          dL2UA/P/b/u3nnUokSHfiICyaokEc2eqm9E7ijw6XEt7MEcOg8vxbBbumHcRNzcx
+          bzY2canjsOBbyOx+y1iuZuZaxYsCgYEA2t8AwidVjet4A8fuRo/j8H2w7FfiGe3w
+          BadciCqIrpgsuPVTDm5r8U397i0mCVPGzWIS/j5fV7C0ObdgdTf3zKU57a9Hvee+
+          cM/0m6M5vc1nA5XD16hwSKGVSvxfE7IGoLPNbpVRR0v1xrhpgIwN9at7GykpnXvo
+          c6gcR7MPVjcCgYEAsJoOQnqGhFiqeYMG4x321kchCQZtD4zDK7pFMgcri0V5juxH
+          uaHnbndQn7+fCHfofLDSDxYkPwhlgozPbk0d4kKhJtmeOTRceeP86oCN9iA7y4Pc
+          e30pNZhQbh1iExYrVS4N9a2McfZ3JEjNZn1JjY5jm1qGaLkLGyoPbIpqjvsCgYEA
+          uPQbuvXsSTqDN4a65uvvLam5WW9GhKzZ2J0+B18SE6BKop3E6vwKwWYrwBps+xLN
+          e392F1zzyrFrCx7YJxX9k/THyAAHuwXbm49P4DmFsMujUpc7YMFY6TeKZkxvt8AH
+          88MdRWZuwbYB4kSx+svffAvFwwT8wrUTkLCt/TTmL+8CgYBUaIDeYqiP3W9tfU2U
+          Lir2WLe/cgAxvVBL212g3e31BcKrxHBExeuHuOEy4f7Ql/dzbQ3n4ucSQqSf0Z15
+          6ZwRPl1tbfuxyD/Bv3ziBRi3V+BECwYy765N7ZcK8o88e1vHjFNRi/8jPIoHabc7
+          G42PodwfD3xUQKONThkgCHvF4A==
+          -----END PRIVATE KEY-----
+
+
+common_ca: |
+          -----BEGIN CERTIFICATE-----
+          MIIDXjCCAkYCCQD0PDbGCtaOyzANBgkqhkiG9w0BAQsFADBwMRkwFwYDVQQDDBBT
+          ZWxmU2lnbmVkUm9vdENBMREwDwYDVQQKDAhFcmljc3NvbjELMAkGA1UECwwCSVQx
+          EjAQBgNVBAcMCVN0b2NraG9sbTESMBAGA1UECAwJU3RvY2tob2xtMQswCQYDVQQG
+          EwJTRTAgFw0yMTExMTkxNzM5MzFaGA8yMDUxMTExMjE3MzkzMVowcDEZMBcGA1UE
+          AwwQU2VsZlNpZ25lZFJvb3RDQTERMA8GA1UECgwIRXJpY3Nzb24xCzAJBgNVBAsM
+          AklUMRIwEAYDVQQHDAlTdG9ja2hvbG0xEjAQBgNVBAgMCVN0b2NraG9sbTELMAkG
+          A1UEBhMCU0UwggEiMA0GCSqGSIb3DQEBAQUAA4IBDwAwggEKAoIBAQDMJBdwN4ED
+          vF8CWPzgvjabZqVS3ftaUzolSqEGD7yvlY0j2ai7w/5+Y+YOJ5rgpHqDyDZ+ntvS
+          bGdjHrpnE9Tx0CcPXmHe+MSxqrOEqx1cbLLi80MxPjujdId2cup22aPdcXhh71+i
+          sVuYzHpzdRE4/LKabN8AnPfv1bruRax31O49dIbAq+RUj4cYMEZCcZNid316rwsv
+          ymzwNpbFRlsABfimwZV/2PPhBoWxGqk5mCz93pYnronQKLar9FtttRUQAxI5R5y2
+          wLfLWfrgpwGwd6XEN1aZJX/CYx/3QHZ+t1oe/fBcHpnzEVtdMMM3filgIJSeSVO0
+          tIq8/nzAAiLdAgMBAAEwDQYJKoZIhvcNAQELBQADggEBALvoW28xdNnNleuApIlg
+          d+lXKYnavVY/tBHg8q3n+0OQc4wJ7BoMIbJhvts2zwxXWwkLquvKnc/NfapPSEEC
+          8Mly2bmgmF2RdAc5s/Ojz/lzdXEvJFa93/0KTlTlO4Of/6kv7XJ1Q3rA2ybLGBSi
+          SZVTYl65sEdlGj1DGTwTBOG49TupFcJ6rK/BtyWFOnEAFpnPXYh2GlB+WTsUVFqn
+          RZ5lLK+EtncTu3HE5WBSkKHhFxbV48dTOP2SSaDTVjjLlbzTEWvj5BOlFYTxPsTB
+          pWvyN2AUEWG4b+Ez7vxz7ccRnHebjl5uJrztQpXS1TSG0mFV2q7+eQcqsSCLyORv
+          a0g=
+          -----END CERTIFICATE-----

@@ -1,0 +1,92 @@
+#!/usr/bin/env groovy
+
+@Library('jenkins-shared-libs')
+import static com.ericsson.orchestration.mgmt.libs.VnfmJenkins.getAgentLabel
+import static com.ericsson.orchestration.mgmt.libs.VnfmArtifact.setArtifact
+import static com.ericsson.orchestration.mgmt.libs.VnfmJenkins.getSeedJobName
+
+
+// Stages template
+def stages = [:]
+// Set Agent label
+String label = getAgentLabel( type: 'concurrent',
+                              this)
+String buildLabel = getAgentLabel(type: 'pre-release',
+                                  this)
+
+
+node(label) {
+    try {
+        // Set Job's ENVs
+        env.SEED_JOB = getSeedJobName(JOB_NAME)
+        env.JOB_TYPE = params.containsKey('JOB_TYPE') ? params.JOB_TYPE : 'pre-release'
+        env.GLOBAL_VAR_PATH = 'jenkins/global.var'
+        env.VAR_PATH = 'jenkins/' + env.SEED_JOB + '/project.var'
+        env.GERRIT_BRANCH = params.GERRIT_BRANCH
+        env.GERRIT_REFSPEC = params.GERRIT_REFSPEC
+        env.SKIP_TESTNG = params.containsKey('SKIP_TESTNG') ? params.SKIP_TESTNG : false
+
+
+        node(buildLabel) {
+            // Run Prepare Stage
+            stage('Prepare') {
+                println('INFO: Checkout CI code...')
+                checkout(scm)
+
+                println('INFO: Load Global vars...')
+                load(env.GLOBAL_VAR_PATH)
+
+                println('INFO: Load Project vars...')
+                load(env.VAR_PATH)
+
+                println('INFO: Load Stages...')
+                stages['git'] = load(env.GIT_STAGE)
+                stages['envs'] = load(env.ENVS_STAGE)
+                stages['build'] = load(env.BUILD_STAGE)
+                stages['docker'] = load(env.DOCKER_STAGE)
+                stages['helm'] = load(env.HELM_STAGE)
+                stages['jobs'] = load(env.JOBS_STAGE)
+                stages['run-job'] = load(env.RUN_JOB_STAGE)
+                stages['clean'] = load(env.CLEAN_STAGE)
+                stages['post'] = load(env.POST_STAGE)
+            }
+
+            // Run Checkout Project Stage
+            stages['git'].CheckoutProject(project: env.GERRIT_PROJECT,
+                                          branch: env.GERRIT_BRANCH,
+                                          refspec: env.GERRIT_REFSPEC,
+                                          type: 'change')
+
+            // Run Update Job ENVs Stage
+            stages['envs'].Update(project: env.GERRIT_PROJECT)
+
+            // Run Build stage
+            stages['build'].BuildNodeJS(env.GERRIT_PROJECT)
+
+            // Run Build Image Stage
+            stages['docker'].BuildImage(name: env.GERRIT_PROJECT)
+
+            // Run Package Helm Chart Stage
+            stages['helm'].PackageChart(project: env.GERRIT_PROJECT)
+
+            // Run Clean Build Agent Stage
+            stages['clean'].CleanBuild(stage: 'Clean Build Agent')
+        }
+
+        // Run Set Job Parameter Stage
+        stages['jobs'].SetJobParameter( name: 'EVNFM_PRE_RELEASE_PARAMS',
+                                        job: 'evnfm-prerelease',
+                                        stage: 'Set EVNFM pre-release parameters')
+
+        // Run Pre-Release Job
+        stages['run-job'].LocalJob( name: env.EVNFM_PRE_RELEASE_JOB,
+                                    params: evaluate(env.EVNFM_PRE_RELEASE_PARAMS))
+
+    } catch (Exception errJob) {
+        println(errJob)
+        currentBuild.result = 'FAILURE'
+    } finally {
+        // Run Post Actions Stage
+        stages['post'].PreRelease()
+    }
+}

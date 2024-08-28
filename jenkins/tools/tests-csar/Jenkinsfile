@@ -1,0 +1,75 @@
+#!/usr/bin/env groovy
+
+@Library('jenkins-shared-libs')
+import static Boolean.parseBoolean
+import static com.ericsson.orchestration.mgmt.libs.VnfmJenkins.getAgentLabel
+import static com.ericsson.orchestration.mgmt.libs.VnfmJenkins.getSeedJobName
+
+
+// Stages template
+def stages = [:]
+// Set Agent label
+String label = getAgentLabel( type: 'gerrit-docker',
+                              this)
+
+
+node(label) {
+    try {
+        // Set Job's ENVs
+        env.SEED_JOB = getSeedJobName(JOB_NAME)
+        env.GLOBAL_VAR_PATH = 'jenkins/global.var'
+        env.VAR_PATH = 'jenkins/' + env.SEED_JOB + '/project.var'
+        env.GERRIT_PROJECT = 'evnfm-testing-artifacts'
+        env.GERRIT_BRANCH = 'master'
+        env.DOCKER_URL = 'armdocker.rnd.ericsson.se/proj-am'
+        env.HELM_URL = 'https://arm.seli.gic.ericsson.se/artifactory/proj-eo-evnfm-helm/snapshots'
+        env.VNFD_DIR = params.VNFD_DIR
+        env.PROJECT_NAME = 'evnfm-testing-artifacts'
+        env.NO_IMAGES = params.NO_IMAGES
+
+
+        // Run Prepare Stage
+        stage('Prepare') {
+            println('INFO: Checkout CI code...')
+            checkout(scm)
+
+            println('INFO: Load Global vars...')
+            load(env.GLOBAL_VAR_PATH)
+
+            println('INFO: Load Project vars...')
+            load(env.VAR_PATH)
+
+            println('INFO: Load Stages...')
+            stages['git'] = load(env.GIT_STAGE)
+            stages['build'] = load(env.BUILD_STAGE)
+            stages['helm'] = load(env.HELM_STAGE)
+            stages['clean'] = load(env.CLEAN_STAGE)
+        }
+
+        // Run Checkout Project Stage
+        stages['git'].CheckoutProject(project: env.GERRIT_PROJECT,
+                                      branch: env.GERRIT_BRANCH)
+
+        // Run upload all charts CNF Stage
+        stages['helm'].UploadAllChartsCNF(dir: env.GERRIT_PROJECT)
+
+        // Run Build CSAR Stage
+        stages['build'].BuildCSAR(dir: env.GERRIT_PROJECT,
+                                  vnfddir: env.VNFD_DIR,
+                                  noImages: parseBoolean(env.NO_IMAGES))
+
+        //Run Design Rule Check Stage
+        stages['helm'].DesignRuleCheckCNF(project: env.PROJECT_NAME)
+
+        //Run Upload CSAR Stage
+        stages['build'].UploadCSARCNF(dir: env.GERRIT_PROJECT,
+                                      vnfddir: env.VNFD_DIR)
+
+    } catch (Exception errJob) {
+        println(errJob)
+        currentBuild.result = 'FAILURE'
+    } finally {
+        // Run Clean Stage
+        stages['clean'].CleanBuild()
+    }
+}

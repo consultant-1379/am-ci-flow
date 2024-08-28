@@ -1,0 +1,5 @@
+-
+  name: ssh access to vms
+  hosts: all
+  roles:
+    - ssh_access

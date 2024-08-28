@@ -1,0 +1,112 @@
+#!/usr/bin/env groovy
+
+@Library('jenkins-shared-libs')
+import static Boolean.parseBoolean
+import static com.ericsson.orchestration.mgmt.libs.VnfmJenkins.getAgentLabel
+import static com.ericsson.orchestration.mgmt.libs.VnfmJenkins.getSeedJobName
+
+
+// Stages template
+def stages = [:]
+// Set Agent label
+String label = getAgentLabel( type: 'concurrent',
+                              this)
+
+
+node(label) {
+    try {
+        // Set Job's ENVs
+        env.SEED_JOB = getSeedJobName(JOB_NAME)
+        env.GLOBAL_VAR_PATH = 'jenkins/global.var'
+        env.VAR_PATH = 'jenkins/' + env.SEED_JOB + '/project.var'
+        env.JOB_TYPE = params.JOB_TYPE
+        env.RESOURCE_NAME = params.RESOURCE_NAME
+        env.DEPLOYMENT_TYPE = params.DEPLOYMENT_TYPE
+        env.CREATE_NAMESPACE = params.CREATE_NAMESPACE
+        env.INSTALL_ENM_STUB = params.INSTALL_ENM_STUB
+        env.DRAC_ENABLE = params.DRAC_ENABLE
+        env.GR_ENABLE = params.GR_ENABLE
+        env.DEPLOY_ALL_CRDS = params.DEPLOY_ALL_CRDS
+        env.INT_CHART_NAME = params.INT_CHART_NAME
+        env.INT_CHART_REPO = params.INT_CHART_REPO
+        env.INT_CHART_VERSION = params.INT_CHART_VERSION
+        env.TAGS = params.TAGS
+        env.HOSTNAME_TYPE = params.HOSTNAME_TYPE
+        env.GAS_HOSTNAME = params.GAS_HOSTNAME
+        env.HELM_REGISTRY_HOSTNAME = params.HELM_REGISTRY_HOSTNAME
+        env.VNFM_HOSTNAME = params.VNFM_HOSTNAME
+        env.VNFM_REGISTRY_HOSTNAME = params.VNFM_REGISTRY_HOSTNAME
+        env.GLOBAL_VNFM_REGISTRY_HOSTNAME = params.GLOBAL_VNFM_REGISTRY_HOSTNAME
+        env.GR_SECONDARY_HOSTNAME = params.GR_SECONDARY_HOSTNAME
+        env.FULL_PATH_TO_SITE_VALUES_FILE = params.FULL_PATH_TO_SITE_VALUES_FILE
+        env.PATH_TO_SITE_VALUES_OVERRIDE_FILE = params.PATH_TO_SITE_VALUES_OVERRIDE_FILE
+        env.PATH_TO_CERTIFICATES_FILES = params.PATH_TO_CERTIFICATES_FILES
+        env.USE_DM_PREPARE = params.USE_DM_PREPARE
+        env.DEPLOYMENT_MANAGER_DOCKER_IMAGE = params.DEPLOYMENT_MANAGER_DOCKER_IMAGE
+        env.OSS_INTEGRATION_CI_REFSPEC = params.OSS_INTEGRATION_CI_REFSPEC
+
+
+        // Run Prepare Stage
+        stage('Prepare') {
+            println('INFO: Checkout CI code...')
+            checkout(scm)
+
+            println('INFO: Load Global vars...')
+            load(env.GLOBAL_VAR_PATH)
+
+            println('INFO: Load Project vars...')
+            load(env.VAR_PATH)
+
+            println('INFO: Load Stages...')
+            stages['git'] = load(env.GIT_STAGE)
+            stages['envs'] = load(env.ENVS_STAGE)
+            stages['run-job'] = load(env.RUN_JOB_STAGE)
+            stages['jobs'] = load(env.JOBS_STAGE)
+            stages['deploy-app'] = load(env.DEPLOY_APP_STAGE)
+            stages['post'] = load(env.POST_STAGE)
+
+            println('INFO: Update Build Short text...')
+            addShortText( background: '',
+                          borderColor: 'white',
+                          text: env.RESOURCE_NAME)
+        }
+
+        // Run Checkout Stage
+        stages['git'].CheckoutProject(project: env.INTEGRATION_CI_PROJECT,
+                                      branch: env.INTEGRATION_CI_BRANCH)
+
+        // Run Update ENVs Stage
+        stages['envs'].RunUpdateEVNFM(env.INTEGRATION_CI_PROJECT, env.RESOURCE_NAME)
+
+        // Run Job fem5s11:Create_Namespace
+        stages['run-job'].RemoteJob(name: (env.ADP_CREATE_NAMESPACE_JOB).split(':')[1],
+                                    server: (env.ADP_CREATE_NAMESPACE_JOB).split(':')[0],
+                                    params: env.ADP_CREATE_NAMESPACE_PARAMS,
+                                    skip: !parseBoolean(env.CREATE_NAMESPACE))
+
+        // Install ENM stub
+        Boolean skipEnmStub = !(parseBoolean(env.INSTALL_ENM_STUB) && (env.DEPLOYMENT_TYPE == 'install'))
+        stages['deploy-app'].DeployEnmStub( name: env.ENM_STUB_NAME,
+                                            helmRepo: env.ENM_STUB_HELM_REPO,
+                                            skip: skipEnmStub)
+
+        // Run Set Job Parameter Stage
+        stages['jobs'].SetJobParameter( name: 'ADP_HELMFILE_DEPLOY_PARAMS',
+                                        job: 'adp-helmfile-deploy',
+                                        stage: 'Update ADP Helmfile Deploy parameters')
+
+        // Run Job ADP_HELMFILE_DEPLOY
+        String deployJob = env.JOB_TYPE == 'values-test' ? env.ADP_TEST_HELMFILE_DEPLOY_JOB : env.ADP_HELMFILE_DEPLOY_JOB
+        stages['run-job'].RemoteJob(name: (deployJob).split(':')[1],
+                                    server: (deployJob).split(':')[0],
+                                    params: env.ADP_HELMFILE_DEPLOY_PARAMS,
+                                    stage: 'ADP HELMFILE DEPLOY JOB')
+
+    } catch (Exception errJob) {
+        println(errJob)
+        currentBuild.result = 'FAILURE'
+    } finally {
+        // Run Post Actions stage
+        stages['post'].Helmfile()
+    }
+}

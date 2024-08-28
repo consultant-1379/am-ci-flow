@@ -1,0 +1,88 @@
+pipeline {
+    agent none
+
+    options {
+        timestamps()
+        timeout(time: 45, unit: 'MINUTES')
+    }
+
+    environment {
+        CLUSTER_FILE = credentials("${CLUSTER_FILE_SECRET_NAME}")
+        GLOBAL_TEST_CONFIG = credentials("${GLOBAL_TEST_CONFIG}")
+        KUBE_CONFIG_PATH = "${CLUSTER_FILE}"
+    }
+
+    stages {
+        stage('Install big version CRDs') {
+            steps {
+                script {
+                    sh '''
+                        mkdir -p /home/amadm100/release-testing-csars
+                        cp -r /home/amadm100/evnfm-testng-csars/* /home/amadm100/release-testing-csars
+                        ls -lah /home/amadm100/release-testing-csars
+                        helm upgrade --kubeconfig=${CLUSTER_FILE} --install --atomic -n eric-crd-ns eric-sec-sip-tls-crd /home/amadm100/release-testing-csars/eric-sec-sip-tls-crd-10.0.0.tgz
+                        helm upgrade --kubeconfig=${CLUSTER_FILE} --install --atomic -n eric-crd-ns eric-sec-certm-crd /home/amadm100/release-testing-csars/eric-sec-certm-crd-10.0.0.tgz
+                        helm upgrade --kubeconfig=${CLUSTER_FILE} --install --atomic -n eric-crd-ns scale-crd /home/amadm100/release-testing-csars/scale-crd-10.0.0.tgz
+                        kubectl get crd --kubeconfig=${CLUSTER_FILE} | grep -E 'siptls.sec.ericsson.com|com.ericsson.sec.tls|com.ericsson.sec.scale.resource' | awk '{print $1}'
+                    '''
+                }
+            }
+        }
+
+        stage('Cleanup test artifacts') {
+            steps {
+                script {
+                    try {
+                        sh '''
+                            kubectl -n ${EVNFM_NAMESPACE} exec -ti 'application-manager-postgres-0' --kubeconfig=${CLUSTER_FILE} -- psql -d orchestrator -U postgres \
+                              -c 'truncate app_lifecycle_operations cascade;' -c 'truncate app_vnf_instance cascade;' -c 'truncate cluster_config_instances;' \
+                              -c 'truncate app_cluster_config_file;' -c 'truncate vnfinstance_namespace_details;'
+                            kubectl -n ${EVNFM_NAMESPACE} exec -ti 'application-manager-postgres-0' --kubeconfig=${CLUSTER_FILE} -- psql -d onboarding -U postgres \
+                              -c 'truncate app_packages cascade;' -c 'truncate charts cascade;'
+                        '''
+                    } catch(Exception exception) {
+                        println(exception)
+                    }
+
+                    try {
+                        sh "kubectl delete namespace evnfm-e2e-test-ns --kubeconfig=${CLUSTER_FILE} || echo 'couldn't delete namespace evnfm-e2e-test-ns'"
+                    } catch(Exception exception) {
+                        println(exception)
+                    }
+
+                    try {
+                        helm_pod = sh(script: "kubectl get pods -n ${EVNFM_NAMESPACE} -o name --kubeconfig ${CLUSTER_FILE} | grep helm", returnStdout: true).trim()
+                        sh "kubectl -n ${EVNFM_NAMESPACE} exec -ti ${helm_pod} --kubeconfig ${CLUSTER_FILE} -c registry -- /bin/bash -c 'rm -rf /storage/onboarded/*'"
+                    } catch(Exception exception) {
+                        println(exception)
+                    }
+                }
+            }
+        }
+
+        stage('Clean install project') {
+            steps {
+                sh 'mvn clean install -DskipTests -ntp'
+            }
+        }
+
+        stage("Run e2e TestNG pre-BUR acceptance tests") {
+            steps {
+                sh 'mvn test -P acceptance-testng -Dtestng.suit=phaseA_GR.xml -DglobalTestConfig=${GLOBAL_TEST_CONFIG}'
+            }
+        }
+    }
+
+    post {
+        failure {
+            sh '''
+                if [[ "${saveLogsOnFailure}"  == "true" ]]; then
+                    chmod +x am-ci-flow/scripts/get_pod_logs.sh
+                    ./am-ci-flow/scripts/get_pod_logs.sh ${EVNFM_NAMESPACE} ${CLUSTER_FILE} || echo "Failed to generate namespace pods logs"
+                    ./am-ci-flow/scripts/get_pod_logs.sh evnfm-e2e-test-ns ${CLUSTER_FILE} || echo "Failed to generate evnfm-e2e-test-ns pod logs"
+                fi
+            '''
+            archiveArtifacts artifacts: 'logs_eo*.tgz, logs_evnfm*.tgz', allowEmptyArchive: true
+        }
+    }
+}

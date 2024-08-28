@@ -1,0 +1,28 @@
+#
+# COPYRIGHT Ericsson 2024
+#
+#
+#
+# The copyright to the computer program(s) herein is the property of
+#
+# Ericsson Inc. The programs may be used and/or copied only with written
+#
+# permission from Ericsson Inc. or in accordance with the terms and
+#
+# conditions stipulated in the agreement/contract under which the
+#
+# program(s) have been supplied.
+#
+
+- name: "eric-am-common-wfs"
+  project: "am-common-wfs"
+  branch: "master"
+  file: "charts/eric-am-common-wfs/Chart.yaml"
+- name: "eric-am-common-wfs-ui"
+  project: "am-common-wfs-ui"
+  branch: "master"
+  file: "charts/eric-am-common-wfs-ui/Chart.yaml"
+- name: "eric-vnfm-orchestrator-service"
+  project: "vnfm-orchestrator"
+  branch: "master"
+  file: "charts/eric-vnfm-orchestrator-service/Chart.yaml"

@@ -1,0 +1,64 @@
+#!/usr/bin/env groovy
+
+@Library('jenkins-shared-libs')
+import static com.ericsson.orchestration.mgmt.libs.VnfmJenkins.getAgentLabel
+import static com.ericsson.orchestration.mgmt.libs.VnfmJenkins.getSeedJobName
+
+
+// Stages template
+def stages = [:]
+String label = getAgentLabel( type: 'quality-checks',
+                              this)
+
+
+node(label) {
+    try {
+        // Set Job's ENVs
+        env.SEED_JOB = getSeedJobName(JOB_NAME)
+        env.JOB_TYPE = 'gerrit'
+        env.GLOBAL_VAR_PATH = 'jenkins/global.var'
+        env.VAR_PATH = 'jenkins/' + env.SEED_JOB + '/project.var'
+        env.GERRIT_BRANCH = params.GERRIT_BRANCH ?: 'master'
+        env.GERRIT_REFSPEC = params.GERRIT_REFSPEC ?: 'refs/heads/master'
+        env.GERRIT_CHANGE_COMMIT_MESSAGE = env.GERRIT_CHANGE_COMMIT_MESSAGE
+        env.GERRIT_CHANGE_SUBJECT = env.GERRIT_CHANGE_SUBJECT
+
+
+        // Run Prepare Stage
+        stage('Prepare') {
+            println('INFO: Checkout CI code...')
+            checkout(scm)
+
+            println('INFO: Load Global vars...')
+            load(env.GLOBAL_VAR_PATH)
+
+            println('INFO: Load Project vars...')
+            load(env.VAR_PATH)
+
+            println('INFO: Load Stages...')
+            stages['git'] = load(env.GIT_STAGE)
+            stages['quality-tests'] = load(env.QUALITY_TESTS_STAGE)
+            stages['clean'] = load(env.CLEAN_STAGE)
+        }
+
+        // Run Check Commit Message Stage
+        stages['git'].CheckCommit(subject: env.GERRIT_CHANGE_SUBJECT,
+                                  message: env.GERRIT_CHANGE_COMMIT_MESSAGE)
+
+        // Run Checkout Project Stage
+        stages['git'].CheckoutProject(project: env.GERRIT_PROJECT,
+                                      branch: env.GERRIT_BRANCH,
+                                      refspec: env.GERRIT_REFSPEC,
+                                      type: 'change')
+
+        // Run Copyright Check Stage
+        stages['quality-tests'].CopyrightCheck(project: env.GERRIT_PROJECT)
+
+    } catch (Exception errJob) {
+        println(errJob)
+        currentBuild.result = 'FAILURE'
+    } finally {
+        // Run Clean Stage
+        stages['clean'].CleanBuild()
+    }
+}

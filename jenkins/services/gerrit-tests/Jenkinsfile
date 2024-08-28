@@ -1,0 +1,138 @@
+#!/usr/bin/env groovy
+
+@Library('jenkins-shared-libs')
+import static com.ericsson.orchestration.mgmt.libs.VnfmJenkins.getAgentLabel
+import static com.ericsson.orchestration.mgmt.libs.VnfmJenkins.getSeedJobName
+
+
+// Stages template
+def stages = [:]
+// Set Agent label
+String label = getAgentLabel( type: 'gerrit',
+                              this)
+
+
+node(label) {
+    try {
+        // Set Job's ENVs
+        env.SEED_JOB = getSeedJobName(JOB_NAME)
+        env.GLOBAL_VAR_PATH = 'jenkins/global.var'
+        env.VAR_PATH = 'jenkins/' + env.SEED_JOB + '/project.var'
+        env.GERRIT_BRANCH = 'master'
+        env.GERRIT_REFSPEC = 'refs/heads/master'
+        env.GERRIT_MASTER = params.GERRIT_MASTER
+        env.GERRIT_SERO_READ = params.GERRIT_SERO_READ
+        env.GERRIT_SELI_READ = params.GERRIT_SELI_READ
+        env.GERRIT_PROJECT = params.GERRIT_PROJECT
+        env.GERRIT_REFSPEC_OLD_COMMIT = params.GERRIT_REFSPEC_OLD_COMMIT
+        env.GERRIT_NEW_BRANCH = params.GERRIT_NEW_BRANCH
+
+
+        // Run Prepare Stage
+        stage('Prepare') {
+            println('INFO: Checkout CI code...')
+            checkout(scm)
+
+            println('INFO: Load Global vars...')
+            load(env.GLOBAL_VAR_PATH)
+
+            println('INFO: Load Project vars...')
+            load(env.VAR_PATH)
+
+            println('INFO: Load Stages...')
+            stages['git'] = load(env.GIT_STAGE)
+            stages['build'] = load(env.BUILD_STAGE)
+            stages['clean'] = load(env.CLEAN_STAGE)
+
+            println('INFO: Set MESSAGE env...')
+            env.MESSAGE = 'NO JIRA - Run test job gerrit-testing ' + env.BUILD_NUMBER
+        }
+
+        // Run SSH test Access Stage
+        stages['git'].TestAccessSSH(master: env.GERRIT_MASTER,
+                                    sero: env.GERRIT_SERO_READ,
+                                    seli: env.GERRIT_SELI_READ)
+
+        // Run Check Mirror Sync Test Stage
+        stages['git'].CheckMirrorSyncTest(master: env.GERRIT_MASTER,
+                                          sero: env.GERRIT_SELI_READ)
+
+        stages['git'].WithGerritHttpUrl(project: env.GERRIT_PROJECT,
+                                        environment: env.GERRIT_SELI_READ) {
+            // Run Checkout Project Stage
+            stages['git'].CheckoutProject(project: env.GERRIT_PROJECT,
+                                          branch: env.GERRIT_BRANCH,
+                                          refspec: env.GERRIT_REFSPEC,
+                                          type: 'change')
+        }
+
+        stages['git'].WithGerritHttpUrl(project: env.GERRIT_PROJECT,
+                                        environment: env.GERRIT_SERO_READ) {
+            // Run Checkout Project Stage
+            stages['git'].CheckoutProject(project: env.GERRIT_PROJECT,
+                                          branch: env.GERRIT_BRANCH,
+                                          refspec: env.GERRIT_REFSPEC,
+                                          type: 'change')
+        }
+
+        stages['git'].WithGerritHttpUrl( project: env.GERRIT_PROJECT,
+                                    environment: env.GERRIT_SELI_READ) {
+            // Run Checkout Project Stage
+            stages['git'].CheckoutProject(project: env.GERRIT_PROJECT,
+                                          branch: env.GERRIT_BRANCH,
+                                          refspec: env.GERRIT_REFSPEC_OLD_COMMIT,
+                                          type: 'change',
+                                          stageName: 'Checkout old changes')
+        }
+
+        stages['git'].WithGerritHttpUrl(project: env.GERRIT_PROJECT,
+                                        environment: env.GERRIT_MASTER) {
+            // Run Checkout Project Stage
+            stages['git'].CheckoutProject(project: env.GERRIT_PROJECT,
+                                          branch: env.GERRIT_BRANCH,
+                                          refspec: env.GERRIT_REFSPEC_OLD_COMMIT,
+                                          type: 'change',
+                                          stageName: 'Checkout old changes')
+        }
+
+        stages['git'].WithGerritHttpUrl(project: env.GERRIT_PROJECT,
+                                        environment: env.GERRIT_MASTER) {
+            // Run Checkout Project Stage
+            stages['git'].CheckoutProject(project: env.GERRIT_PROJECT,
+                                          branch: env.GERRIT_BRANCH,
+                                          type: 'push')
+
+            // Run Update POM files Stage
+            stages['build'].UpdatePOM(env.GERRIT_PROJECT)
+
+            // Run Create Branch Stage
+            stages['git'].CreateBranch(project: env.GERRIT_PROJECT,
+                                       branch: env.GERRIT_NEW_BRANCH)
+
+            // Run Create Change Stage
+            stages['git'].CreateChange(project: env.GERRIT_PROJECT,
+                                       files: env.POM_FILE,
+                                       message: env.MESSAGE,
+                                       branch: env.GERRIT_NEW_BRANCH)
+
+            // Run Test Tag Stage
+            stages['git'].TagTestStage(project: env.GERRIT_PROJECT,
+                                       branch: env.GERRIT_NEW_BRANCH)
+
+            // Run Delete Last Commite Stage
+            stages['git'].DeleteLastCommit(project: env.GERRIT_PROJECT,
+                                           branch: env.GERRIT_NEW_BRANCH)
+
+            // Run Delete Branch Stage
+            stages['git'].DeleteBranch(project: env.GERRIT_PROJECT,
+                                       branch: env.GERRIT_NEW_BRANCH)
+        }
+
+    } catch (Exception errJob) {
+        println(errJob)
+        currentBuild.result = 'FAILURE'
+    } finally {
+        // Run Clean Stage
+        stages['clean'].CleanBuild()
+    }
+}

@@ -1,0 +1,49 @@
+/*******************************************************************************
+ * COPYRIGHT Ericsson 2024
+ *
+ *
+ *
+ * The copyright to the computer program(s) herein is the property of
+ *
+ * Ericsson Inc. The programs may be used and/or copied only with written
+ *
+ * permission from Ericsson Inc. or in accordance with the terms and
+ *
+ * conditions stipulated in the agreement/contract under which the
+ *
+ * program(s) have been supplied.
+ ******************************************************************************/
+// Job's name ENVs
+env.PRE_RELEASE_JOB = 'E-VNFM_pre-release'
+env.RELEASE_JOB = 'eric-eo-evnfm_release-flow'
+
+
+// GIT ENVs
+env.GERRIT_PROJECT = 'am-integration-charts'
+env.GIT_COMMIT_FILES = '''  pom.xml \\
+                          | charts/eric-eo-evnfm/Chart.yaml \\
+                          | eric-eo-evnfm-*/pom.xml'''.stripMargin()
+env.HELM_MIGRATION_TOOL_DIR = 'eric-am-onboarding-service-registry-migration'
+
+
+// Sonar ENVs
+env.SONAR_PROJECT = 'com.ericsson.orchestration.mgmt:am-integration-charts'
+env.SONAR_SERVER = 'SonarQubeDCE'
+
+
+// Build ENVs
+env.TEST_SCRIPTS = "${WORKSPACE}/${env.OSS_CI_PROJECT}/ci/jenkins/scripts/common/kubernetes_range_checkers/*.sh"
+env.TEMPLATES_PATH = "${WORKSPACE}/templates/precode/*.yaml"
+env.KUBE_VERSION_FILE_PATH = 'charts/eric-eo-evnfm/kubeVersion.yaml'
+env.SPINNNAKER_HOOK_NAME = 'submit-EVNFM-chart-reviews'
+env.SKIP_VALIDATE_CHART_SCHEMA = false
+env.SKIP_BUILD_IMAGE_TEST = false
+
+
+// Docker ENVs
+env.DOCKER_DIR = '.'
+env.DOCKER_URL = 'armdocker.rnd.ericsson.se/proj-am'
+
+
+// Helm ENVs
+env.HELM_RELEASE_URL = 'https://arm.seli.gic.ericsson.se/artifactory/proj-eo-evnfm-drop-helm'

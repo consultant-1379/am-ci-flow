@@ -1,0 +1,264 @@
+#!/usr/bin/env groovy
+
+@Library('jenkins-shared-libs')
+import static Boolean.parseBoolean
+import static com.ericsson.orchestration.mgmt.libs.VnfmFunctions.checkNotBlank
+import static com.ericsson.orchestration.mgmt.libs.VnfmJenkins.getAgentLabel
+import static com.ericsson.orchestration.mgmt.libs.VnfmJenkins.getSeedJobName
+
+
+// Stages template
+def stages = [:]
+// Set Agent label
+String label = getAgentLabel( type: 'concurrent',
+                              this)
+
+
+node(label) {
+    try {
+        // Set Job's ENVs
+        env.SEED_JOB = getSeedJobName(JOB_NAME)
+        env.GLOBAL_VAR_PATH = 'jenkins/global.var'
+        env.VAR_PATH = 'jenkins/' + env.SEED_JOB + '/project.var'
+        env.JOB_TYPE = params.JOB_TYPE
+        env.CHART_LIST = params.CHART_LIST
+        env.GERRIT_REFSPEC = params.GERRIT_REFSPEC
+        env.AM_INTEGRATION_REFSPEC = params.AM_INTEGRATION_REFSPEC
+        env.APP_NAME = params.APP_NAME
+        env.ENV_LABEL = params.ENV_LABEL
+        env.ALLOW_DOWNGRADE = params.ALLOW_DOWNGRADE
+        env.DEPLOYMENT_MANAGER_DOCKER_IMAGE = params.DEPLOYMENT_MANAGER_DOCKER_IMAGE
+        env.SKIP_UPGRADE_TESTS = params.SKIP_UPGRADE_TESTS
+        env.SKIP_TESTNG = params.SKIP_TESTNG
+        env.INSTALL_ENM_STUB = params.INSTALL_ENM_STUB
+        env.DRAC_ENABLE = params.DRAC_ENABLE
+        env.GR_ENABLE = params.GR_ENABLE
+        env.TESTNG_SLAVE_LABEL = params.TESTNG_SLAVE_LABEL
+        env.EVNFM_BRANCH = params.EVNFM_BRANCH
+        env.EO_BRANCH = params.EO_BRANCH
+        env.EO_HELMFILE_BASE_VERSION = params.EO_HELMFILE_BASE_VERSION
+        env.FULL_PATH_TO_SITE_VALUES_FILE = params.FULL_PATH_TO_SITE_VALUES_FILE
+        env.OFOC_SNAPSHOT_VERSION = params.OFOC_SNAPSHOT_VERSION ?: ''
+
+
+        // Run Prepare Stage
+        stage('Prepare') {
+            println('INFO: Checkout CI code...')
+            checkout(scm)
+
+            println('INFO: Load Global vars...')
+            load(env.GLOBAL_VAR_PATH)
+
+            println('INFO: Load Project vars...')
+            load(env.VAR_PATH)
+
+            println('INFO: Load Stages...')
+            stages['git'] = load(env.GIT_STAGE)
+            stages['envs'] = load(env.ENVS_STAGE)
+            stages['run-job'] = load(env.RUN_JOB_STAGE)
+            stages['jobs'] = load(env.JOBS_STAGE)
+
+            if(env.JOB_TYPE in ['pointfix', 'pointfix-release']) {
+                println('INFO: Set pointfix label for cluster env...')
+                env.ENV_LABEL = env.POINTFIX_ENV_LABEL
+            }
+        }
+
+        // Run Checkout Stage
+        stages['git'].CheckoutProject(project: env.INTEGRATION_CI_PROJECT,
+                                      branch: env.INTEGRATION_CI_BRANCH)
+
+        // Run Update ENVs Stage
+        stages['envs'].RunUpdateEVNFM(env.INTEGRATION_CI_PROJECT)
+
+        // Run Set Job Parameter Stage
+        Boolean getChartVersionSkip = checkNotBlank(env.EO_HELMFILE_BASE_VERSION)
+        stages['jobs'].SetJobParameter( name: 'GET_CHART_VERSION_PARAMS',
+                                        job: 'get-chart-version',
+                                        stage: 'Set Get Chart Version parameters',
+                                        skip: getChartVersionSkip)
+
+        // Run Job Get Chart Version
+        stages['run-job'].LocalJob( name: env.GET_CHART_VERSION_JOB,
+                                    params: evaluate(env.GET_CHART_VERSION_PARAMS),
+                                    artifact: 'artifact.properties',
+                                    skip: getChartVersionSkip)
+
+        // Run Set Variable Stage
+        stages['envs'].SetVar(name: 'EO_HELMFILE_BASE_VERSION',
+                              artifact: env.GET_CHART_VERSION_JOB + '.artifact',
+                              skip: getChartVersionSkip)
+
+        // Run Set Job Parameter Stage
+        stages['jobs'].SetJobParameter( name: 'ADP_FETCH_UPLOAD_PARAMS',
+                                        job: 'adp-fetch-upload',
+                                        stage: 'Update ADP Fetch Upload parameters')
+
+        // Run Job ADP_FETCH_UPLOAD
+        stages['run-job'].RemoteJob(name: (env.ADP_FETCH_UPLOAD_JOB).split(':')[1],
+                                    server: (env.ADP_FETCH_UPLOAD_JOB).split(':')[0],
+                                    params: env.ADP_FETCH_UPLOAD_PARAMS,
+                                    artifact: 'artifact.properties')
+
+        // Run Set Job Parameter Stage
+        stages['jobs'].SetJobParameter( name: 'ADP_HELMFILE_FBU_PARAMS',
+                                        job: 'adp-helmfile-fbu',
+                                        artifact: env.ADP_FETCH_UPLOAD_JOB + '.artifact',
+                                        stage: 'Update ADP Helmfile FBU parameters')
+
+        // Run Job ADP_HELMFILE_FBU
+        stages['run-job'].RemoteJob(name: (env.ADP_HELMFILE_FBU_JOB).split(':')[1],
+                                    server: (env.ADP_HELMFILE_FBU_JOB).split(':')[0],
+                                    params: env.ADP_HELMFILE_FBU_PARAMS,
+                                    artifact: 'artifact.properties')
+
+        parallel(
+            'TestNG': {
+                try {
+                    // Run Set Job Parameter Stage
+                    stages['jobs'].SetJobParameter( name: 'TESTNG_RESERVE_PARAMS',
+                                                    job: 'reserve-env',
+                                                    stage: 'Set Reserve TestNG parameters')
+
+                    // Run Reserve Env Job
+                    stages['run-job'].LocalJob( name: env.RESERVE_ENV_JOB,
+                                                params: evaluate(env.TESTNG_RESERVE_PARAMS),
+                                                artifact: 'artifact.properties',
+                                                stage: 'TestNG_Reserve-ENV')
+
+                    // Run Set Job Parameter Stage
+                    stages['jobs'].SetJobParameter( name: 'TESTNG_RESOURCE_NAME',
+                                                    job: 'resource-name',
+                                                    artifact: 'TestNG_Reserve-ENV.artifact',
+                                                    stage: 'Set TestNG Resource name parameter')
+
+                    // Run Set Job Parameter Stage
+                    stages['jobs'].SetJobParameter( name: 'TESTNG_DEPLOY_PARAMS',
+                                                    job: 'helmfile-deploy',
+                                                    artifact: env.ADP_HELMFILE_FBU_JOB + '.artifact',
+                                                    stage: 'Set TestNG deploy parameters')
+
+                    // Run Helmfile Install stage
+                    stages['run-job'].LocalJob( name: env.HELMFILE_DEPLOY_JOB,
+                                                params: evaluate(env.TESTNG_DEPLOY_PARAMS),
+                                                artifact: 'artifact.properties')
+
+                    // Run Set Job Parameter Stage
+                    stages['jobs'].SetJobParameter( name: 'TESTNG_PARAMS',
+                                                    job: 'testng',
+                                                    artifact: env.HELMFILE_DEPLOY_JOB + '.artifact',
+                                                    stage: 'Set TestNG parameters',
+                                                    skip: parseBoolean(env.SKIP_TESTNG))
+
+                    // Run TestNG Job
+                    stages['run-job'].LocalJob( name: env.TESTNG_JOB,
+                                                params: evaluate(env.TESTNG_PARAMS),
+                                                skip: parseBoolean(env.SKIP_TESTNG))
+                } catch (Exception errStage) {
+                    println(errStage)
+                    sh('exit 1')
+                } catch (Throwable t) {
+                    throw t
+                } finally {
+                    // Run Set Job Parameter Stage
+                    stages['jobs'].SetJobParameter( name: 'TESTNG_UNLOCK_PARAMS',
+                                                    job: 'unlock',
+                                                    stage: 'Set TestNG Unlock parameters')
+
+                    // Run Job UNLOCK
+                    stages['run-job'].LocalJob( name: env.UNLOCK_JOB,
+                                                params: evaluate(env.TESTNG_UNLOCK_PARAMS),
+                                                wait: false,
+                                                stage: 'Unlock TestNG Environment')
+                }
+            },
+            'Clean Install': {
+                try {
+                    // Run Set Job Parameter Stage
+                    stages['jobs'].SetJobParameter( name: 'CLEANG_RESERVE_PARAMS',
+                                                    job: 'reserve-env',
+                                                    stage: 'Set Reserve Clean parameters',
+                                                    skip: parseBoolean(env.SKIP_UPGRADE_TESTS))
+
+                    // Run Reserve Env Job
+                    stages['run-job'].LocalJob( name: env.RESERVE_ENV_JOB,
+                                                params: evaluate(env.CLEANG_RESERVE_PARAMS),
+                                                artifact: 'artifact.properties',
+                                                stage: 'Clean_Reserve-ENV',
+                                                skip: parseBoolean(env.SKIP_UPGRADE_TESTS))
+
+                    // Run Set Job Parameter Stage
+                    stages['jobs'].SetJobParameter( name: 'CLEAN_RESOURCE_NAME',
+                                                    job: 'resource-name',
+                                                    artifact: 'Clean_Reserve-ENV.artifact',
+                                                    stage: 'Set Clean Resource name parameter',
+                                                    skip: parseBoolean(env.SKIP_UPGRADE_TESTS))
+
+                    // Run Set Job Parameter Stage
+                    stages['jobs'].SetJobParameter( name: 'HELMFILE_INSTALL_PARAMS',
+                                                    job: 'helmfile-install',
+                                                    stage: 'Set Helmfile Install parameters',
+                                                    skip: parseBoolean(env.SKIP_UPGRADE_TESTS))
+
+                    // Run Helmfile Install stage
+                    stages['run-job'].LocalJob( name: env.HELMFILE_DEPLOY_JOB,
+                                                params: evaluate(env.HELMFILE_INSTALL_PARAMS),
+                                                stage: 'Helmfile Install',
+                                                artifact: 'artifact.properties',
+                                                artifactName: 'Clean_E-VNFM_Helmfile-Deploy.artifact',
+                                                skip: parseBoolean(env.SKIP_UPGRADE_TESTS))
+
+                    // Run Set Job Parameter Stage
+                    stages['jobs'].SetJobParameter( name: 'HELMFILE_UPGRADE_PARAMS',
+                                                    job: 'helmfile-upgrade',
+                                                    artifact: env.ADP_HELMFILE_FBU_JOB + '.artifact',
+                                                    stage: 'Set Helmfile Upgrade parameters',
+                                                    skip: parseBoolean(env.SKIP_UPGRADE_TESTS))
+
+                    // Run Helmfile Upgrade stage
+                    stages['run-job'].LocalJob( name: env.HELMFILE_DEPLOY_JOB,
+                                                params: evaluate(env.HELMFILE_UPGRADE_PARAMS),
+                                                stage: 'Helmfile Upgrade',
+                                                skip: parseBoolean(env.SKIP_UPGRADE_TESTS))
+                } catch (Exception errStage) {
+                    println(errStage)
+                    sh('exit 1')
+                } catch (Throwable t) {
+                    throw t
+                } finally {
+                    // Run Set Job Parameter Stage
+                    stages['jobs'].SetJobParameter( name: 'CLEAN_UNLOCK_PARAMS',
+                                                    job: 'unlock',
+                                                    stage: 'Set Clean Unlock parameters',
+                                                    skip: parseBoolean(env.SKIP_UPGRADE_TESTS))
+
+                    // Run Job UNLOCK
+                    stages['run-job'].LocalJob( name: env.UNLOCK_JOB,
+                                                params: evaluate(env.CLEAN_UNLOCK_PARAMS),
+                                                wait: false,
+                                                stage: 'Unlock Install Environment',
+                                                skip: parseBoolean(env.SKIP_UPGRADE_TESTS))
+                }
+            }
+        )
+
+        // Run Set Job Parameter Stage
+        Boolean chartReleaseSkip = env.JOB_TYPE != 'pointfix-release'
+        stages['jobs'].SetJobParameter( name: 'HELMFILE_RELEASE_PARAMS',
+                                        job: 'helmfile-release',
+                                        stage: 'Set Helmfile Release parameters',
+                                        skip: chartReleaseSkip)
+
+        // Run Job Helmfile Release
+        stages['run-job'].LocalJob( name: env.HELMFILE_RELEASE_JOB,
+                                    params: evaluate(env.HELMFILE_RELEASE_PARAMS),
+                                    artifact: 'artifact.properties',
+                                    skip: chartReleaseSkip)
+
+    } catch (Exception errJob) {
+        println(errJob)
+        currentBuild.result = 'FAILURE'
+    } finally {
+        cleanWs()
+    }
+}

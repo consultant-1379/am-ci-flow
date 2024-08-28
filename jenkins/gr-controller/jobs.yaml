@@ -1,0 +1,173 @@
+#
+# COPYRIGHT Ericsson 2024
+#
+#
+#
+# The copyright to the computer program(s) herein is the property of
+#
+# Ericsson Inc. The programs may be used and/or copied only with written
+#
+# permission from Ericsson Inc. or in accordance with the terms and
+#
+# conditions stipulated in the agreement/contract under which the
+#
+# program(s) have been supplied.
+#
+
+# Gerrit Unit Tests Job
+gerritUnitTests:
+  name: "gerrit-unit-tests"
+  description: "Pipeline for gerrit unit review as a part of Gerrit verification process"
+  file: "jenkins/pipelines/gerrit-unit-tests/jdk17/Jenkinsfile"
+  maxLogDays: "14"
+  maxLogBuilds: "20"
+  gerritBranch: ".*"
+  gerritTriggers: "Patchset Created" # Values: "Submit-To-Pipeline"; "Change Merged"; "Patchset Created"; false
+  parallelRun: true
+  enable: true
+# Gerrit Deployment Job
+gerritDeployment:
+  name: "gerrit-deployment"
+  description: "Pipeline for gerrit deployment review as a part of Gerrit verification process"
+  file: "jenkins/pipelines/gerrit-deploy/base/Jenkinsfile"
+  maxLogDays: "14"
+  maxLogBuilds: "20"
+  gerritBranch: ".*"
+  gerritTriggers: "Patchset Created" # Values: "Submit-To-Pipeline"; "Change Merged"; "Patchset Created"; false
+  parallelRun: false
+  enable: true
+# Gerrit Quality Checks Job
+gerritQualityChecks:
+  name: "gerrit-quality-checks"
+  description: "Pipeline for gerrit quality review as a part of Gerrit verification process"
+  file: "jenkins/pipelines/gerrit-quality-checks/jdk17/Jenkinsfile"
+  maxLogDays: "14"
+  maxLogBuilds: "20"
+  gerritBranch: ".*"
+  gerritTriggers: "Patchset Created" # Values: "Submit-To-Pipeline"; "Change Merged"; "Patchset Created"; false
+  parallelRun: true
+  enable: true
+# Submit-To-Pipeline Job
+submitToPipeline:
+  name: "Submit-To-Pipeline"
+  description: "Pipeline for run Submit-To-Pipeline trigger flow"
+  file: "jenkins/pipelines/submit-to-pipeline/base/Jenkinsfile"
+  maxLogDays: "14"
+  maxLogBuilds: "20"
+  gerritBranch: ".*"
+  gerritTriggers: "Submit-To-Pipeline" # Values: "Submit-To-Pipeline"; "Change Merged"; "Patchset Created"; false
+  parallelRun: true
+  enable: true
+# Release Flow Job
+releaseFlow:
+  name: "release-flow"
+  description: "Pipeline for release branch"
+  file: "jenkins/pipelines/release/jdk17/Jenkinsfile"
+  maxLogDays: "14"
+  maxLogBuilds: "20"
+  parallelRun: false
+  enable: true
+  parameters:
+    GERRIT_CHANGE_URL:
+      type: "string"
+      value: ""
+      description: "URL of Gerrit change"
+# Post-Merge Job
+postMerge:
+  name: "post-merge"
+  description: "Pipeline for Post-Merge actions"
+  file: "jenkins/pipelines/post-merge/base-dr/Jenkinsfile"
+  maxLogDays: "7"
+  maxLogBuilds: "20"
+  cron: "TZ=Europe/Kiev\nH 2 * * 2"
+  enable: true
+# Deploy Job
+deploy:
+  name: "deploy"
+  description: "Pipeline for Deploy GR-Clusters"
+  file: "jenkins/gr-controller/deploy/Jenkinsfile"
+  maxLogDays: "14"
+  maxLogBuilds: "20"
+  parallelRun: false
+  enable: true
+  parameters:
+    #### Common parameters ####
+    DEPLOYMENT_TYPE:
+      type: "choice"
+      description: "Select Deployment type"
+    INT_CHART_NAME:
+      type: "string"
+      value: "eric-eo-helmfile"
+      description: "Enter an Integration Chart Name"
+    INT_CHART_REPO:
+      type: "string"
+      value: "https://arm.seli.gic.ericsson.se/artifactory/proj-eo-drop-helm"
+      description: "Enter an Integration Chart Repository"
+    INT_CHART_VERSION:
+      type: "string"
+      value: ""
+      description: "Enter an Integration Chart Version"
+    #### Primary Site parameters ####
+    PRIMARY_ENV:
+      type: "string"
+      value: ""
+      description: "Enter a Resource Name of the Primary site"
+    #### Secondary Site parameters ####
+    SECONDARY_ENV:
+      type: "string"
+      value: ""
+      description: "Enter a Resource Name of the Secondary site"
+    ####
+    OSS_INTEGRATION_CI_REFSPEC:
+      type: "string"
+      value: ""
+      description: 'Gerrit RefSpec of the change to oss-integration-ci repository'
+# Testing Job
+testing:
+  name: "testing"
+  description: "Pipeline for Testing actions"
+  file: "jenkins/gr-controller/testing/Jenkinsfile"
+  maxLogDays: "7"
+  maxLogBuilds: "20"
+  parallelRun: false
+  enable: true
+  parameters:
+    CLUSTER:
+      type: "string"
+      value: ""
+      description: "Name of the cluster"
+    NAMESPACE:
+      type: "string"
+      value: ""
+      description: "Name of the namespace"
+# Pre-Release Job
+preRelease:
+  name: "pre-release"
+  description: "Pipeline for Pre-Release check"
+  file: "jenkins/gr-controller/pre-release/Jenkinsfile"
+  maxLogDays: "7"
+  maxLogBuilds: "20"
+  parallelRun: false
+  enable: true
+  parameters:
+    GERRIT_BRANCH:
+      type: "string"
+      value: "master"
+      description: "Enter gerrit branch. E.g.: 'master'"
+    GERRIT_REFSPEC:
+      type: "string"
+      value: "refs/heads/master"
+      description: "Enter gerrit refspec. E.g.: 'refs/changes/*/*/*'"
+    SKIP_CLEANUP:
+      type: "bool"
+      value: false
+      description: 'Skip to delete environment after testing'
+# Uplift Version Job
+upliftVersion:
+  name: "uplift-version"
+  description: "Pipeline to update version into the CVNFM"
+  file: "jenkins/pipelines/uplift-version/base/Jenkinsfile"
+  maxLogDays: "60"
+  maxLogBuilds: "20"
+  parallelRun: false
+  enable: true

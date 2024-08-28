@@ -1,0 +1,24 @@
+---
+- name: "add user {{ user_to_add | mandatory }}"
+  become: true
+  become_user: root
+  user:
+    name: "{{ user_to_add | mandatory }}"
+    shell: "/bin/bash"
+    password: "{{ password | password_hash('sha512', 'mysecretsalt') }}"
+  when: password is defined
+- name: "add user {{ user_to_add | mandatory }}"
+  become: true
+  become_user: root
+  user:
+    name: "{{ user_to_add | mandatory }}"
+    shell: "/bin/bash"
+  when: password is not defined
+- name: "Grant sudo permissions"
+  become: true
+  become_user: root
+  shell: "usermod -aG wheel {{ user_to_add | mandatory }}"
+- name: "No sudo password required"
+  become: true
+  become_user: root
+  shell: "echo '{{ user_to_add | mandatory }} ALL=(root) NOPASSWD:ALL' > /etc/sudoers.d/{{ user_to_add | mandatory }}"

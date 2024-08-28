@@ -1,0 +1,5 @@
+-
+  name: copy file to remote hosts
+  hosts: all
+  roles:
+    - copy-to-hosts

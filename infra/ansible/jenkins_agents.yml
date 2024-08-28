@@ -1,0 +1,50 @@
+- name: "Configure Jenkins agents"
+  hosts: jenkins_agents
+  gather_facts: false
+  become: yes
+  order: sorted
+
+  roles:
+    - role: docker-reconfig
+      vars:
+        docker_mirror:
+          - "http://armdockerhub.rnd.ericsson.se"
+          - "http://selidockerhub.seli.gic.ericsson.se"
+        docker_host: "armdocker.rnd.ericsson.se/dockerhub-ericsson-remote"
+      tags:
+        - config
+    - role: eke
+      vars:
+        eke_url: "https://www.rnd.gic.ericsson.se/release/latest/eke/bin/linux/amd64/eke"
+    - role: kubectl
+      vars:
+        kubectl_url: "https://www.rnd.gic.ericsson.se/release/v1.24.2-kaas.1/bin/linux/amd64/kubectl"
+    - role: set-system-config
+    - role: helmfile
+      vars:
+        helmfile_url: "https://arm1s11-eiffel052.eiffel.gic.ericsson.se:8443/nexus/service/local/repositories/eo-3pp-tools/content/com/helm/helmfile"
+        helmfile_version: "0.149.0"
+    - role: spin-cli
+      vars:
+        spin_url: "https://storage.googleapis.com/spinnaker-artifacts/spin"
+        spin_version: "1.29.0"
+    - role: yq
+      vars:
+        yq_version: "3.2.3"
+
+  tasks:
+    - name: Install OpenLDAP Client
+      yum:
+        name: openldap-clients
+        update_cache: yes
+        state: present
+    - name: Install Netcat
+      yum:
+        name: netcat
+        update_cache: yes
+        state: present
+    - name: Install Bind-Utils
+      yum:
+        name: bind-utils
+        update_cache: yes
+        state: present

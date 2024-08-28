@@ -1,0 +1,223 @@
+#
+# COPYRIGHT Ericsson 2024
+#
+#
+#
+# The copyright to the computer program(s) herein is the property of
+#
+# Ericsson Inc. The programs may be used and/or copied only with written
+#
+# permission from Ericsson Inc. or in accordance with the terms and
+#
+# conditions stipulated in the agreement/contract under which the
+#
+# program(s) have been supplied.
+#
+
+# Jobs Discover Job
+discover:
+  name: "jobs-discover"
+  description: "Pipeline for discovering information about Jenkins jobs"
+  file: "jenkins/services/jobs-discover/Jenkinsfile"
+  maxLogDays: "7"
+  maxLogBuilds: "10"
+  parallelRun: false
+  enable: true
+# Cleanup Cluster Job
+cleanupCluster:
+  name: "cleanup-cluster"
+  description: "Pipeline for deleting namespaces"
+  file: "jenkins/services/cleanup-cluster/Jenkinsfile"
+  maxLogDays: "30"
+  maxLogBuilds: "30"
+  cron: "TZ=Europe/Kiev\nH H/4 * * *"
+  parallelRun: false
+  enable: true
+# Load Cluster Report Job
+loadClusterReport:
+  name: "load-cluster-report"
+  description: "Pipeline for create load cluster report"
+  file: "jenkins/services/load-cluster-report/Jenkinsfile"
+  maxLogDays: "7"
+  maxLogBuilds: "10"
+  cron: "TZ=Europe/Kiev\nH H(10-20)/2 * * 1-5"
+  parallelRun: false
+  enable: true
+# Agents Cleanup Job
+agentsCleanup:
+  name: "agents-cleanup"
+  description: "Pipeline for cleaning up each of the Jenkins agents"
+  file: "jenkins/services/agents-cleanup/Jenkinsfile"
+  maxLogDays: "7"
+  maxLogBuilds: "10"
+  cron: "H */4 * * *"
+  parallelRun: false
+  enable: true
+  parameters:
+    process_engine_01:
+      type: "bool"
+      value: true
+      description: "Can be used to only run on process_engine_1 agent"
+    process_engine_02:
+      type: "bool"
+      value: true
+      description: "Can be used to only run on process_engine_2 agent"
+    process_engine_03:
+      type: "bool"
+      value: true
+      description: "Can be used to only run on process_engine_3 agent"
+    process_engine_04:
+      type: "bool"
+      value: true
+      description: "Can be used to only run on process_engine_4 agent"
+    process_engine_05:
+      type: "bool"
+      value: true
+      description: "Can be used to only run on process_engine_5 agent"
+    process_engine_06:
+      type: "bool"
+      value: true
+      description: "Can be used to only run on process_engine_6 agent"
+    process_engine_07:
+      type: "bool"
+      value: true
+      description: "Can be used to only run on process_engine_7 agent"
+    process_engine_08:
+      type: "bool"
+      value: true
+      description: "Can be used to only run on process_engine_8 agent"
+    process_engine_09:
+      type: "bool"
+      value: true
+      description: "Can be used to only run on process_engine_9 agent"
+    process_engine_10:
+      type: "bool"
+      value: true
+      description: "Can be used to only run on process_engine_10 agent"
+    process_engine_11:
+      type: "bool"
+      value: true
+      description: "Can be used to only run on process_engine_11 agent"
+    process_engine_12:
+      type: "bool"
+      value: true
+      description: "Can be used to only run on process_engine_12 agent"
+    process_engine_13:
+      type: "bool"
+      value: true
+      description: "Can be used to only run on process_engine_13 agent"
+    process_engine_14:
+      type: "bool"
+      value: true
+      description: "Can be used to only run on process_engine_14 agent"
+    process_engine_15:
+      type: "bool"
+      value: true
+      description: "Can be used to only run on process_engine_15 agent"
+    process_engine_16:
+      type: "bool"
+      value: true
+      description: "Can be used to only run on process_engine_16 agent"
+    process_engine_17:
+      type: "bool"
+      value: true
+      description: "Can be used to only run on process_engine_17 agent"
+    process_engine_18:
+      type: "bool"
+      value: true
+      description: "Can be used to only run on process_engine_18 agent"
+    process_engine_19:
+      type: "bool"
+      value: true
+      description: "Can be used to only run on process_engine_19 agent"
+    process_engine_20:
+      type: "bool"
+      value: true
+      description: "Can be used to only run on process_engine_20 agent"
+# Build Images Job
+buildImages:
+  name: "build-images"
+  description: "Pipeline for Build Docker images"
+  file: "jenkins/services/build-images/Jenkinsfile"
+  maxLogDays: "21"
+  maxLogBuilds: "10"
+  cron: "TZ=Europe/Kiev\nH 8 * * 1-5"
+  parallelRun: false
+  enable: true
+# Reload Pipelines Job
+reloadPipelines:
+  name: "reload-pipelines"
+  description: "Pipeline for Reload seed jobs config"
+  file: "jenkins/services/reload-pipelines/Jenkinsfile"
+  maxLogDays: "21"
+  maxLogBuilds: "10"
+  cron: "TZ=Europe/Kiev\nH 7 * * *"
+  parallelRun: false
+  enable: true
+# Reload Spinnaker Pipelines Job
+reloadSpinnakerPipelines:
+  name: "reload-spinnaker-pipelines"
+  description: "Pipeline for Reload Spinnaker pipelines config"
+  file: "jenkins/services/reload-spinnaker-pipelines/Jenkinsfile"
+  maxLogDays: "21"
+  maxLogBuilds: "10"
+  cron: "TZ=Europe/Kiev\nH 7 * * *"
+  parallelRun: false
+  enable: true
+# Setup Jenkins Job
+setupJenkins:
+  name: "setup-jenkins"
+  description: "Pipeline for setup Jenkins"
+  file: "jenkins/services/setup-jenkins/Jenkinsfile"
+  maxLogDays: "30"
+  maxLogBuilds: "30"
+  cron: "TZ=Europe/Kiev\nH 6 * * *"
+  parallelRun: false
+  enable: true
+# Setup Max Pod Limit Job
+clusterPodLimit:
+  name: "cluster-pod-limit"
+  description: "Pipeline for setup max pod limit on cluster workers"
+  file: "jenkins/services/cluster-pod-limit/Jenkinsfile"
+  maxLogDays: "60"
+  maxLogBuilds: "30"
+  parallelRun: false
+  enable: true
+  parameters:
+    CLUSTER:
+      type: "choice"
+      description: "EWS cluster to change Pod limit"
+# Gerrit Tests Job
+gerritTests:
+  name: "gerrit-tests"
+  description: "Gerrit testing pipeline"
+  file: "jenkins/services/gerrit-tests/Jenkinsfile"
+  maxLogDays: "7"
+  maxLogBuilds: "10"
+  parallelRun: false
+  enable: true
+  parameters:
+    GERRIT_MASTER:
+      type: "string"
+      value: "gerrit.ericsson.se"
+      description: "Link URL gerrit master. E.g.: gerrit.ericsson.se"
+    GERRIT_SERO_READ:
+      type: "string"
+      value: "gerritmirror-direct.sero.gic.ericsson.se"
+      description: "Link URL gerrit sero read. E.g.: gerritmirror-direct.sero.gic.ericsson.se"
+    GERRIT_SELI_READ:
+      type: "string"
+      value: "gerritmirror-ha.lmera.ericsson.se"
+      description: "Link URL gerrit seli read. E.g.: gerritmirror-ha.lmera.ericsson.se"
+    GERRIT_NEW_BRANCH:
+      type: "string"
+      value: "servicetest"
+      description: "Enter gerrit branch to create for test. E.g.: servicetest"
+    GERRIT_PROJECT:
+      type: "string"
+      value: "am-onboarding-service"
+      description: "Project for tests. E.g.: am-onboarding-service"
+    GERRIT_REFSPEC_OLD_COMMIT:
+      type: "string"
+      value: ""
+      description: "Enter gerrit refspec. E.g.: refs/changes/35/16376935/5"

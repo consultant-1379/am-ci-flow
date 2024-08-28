@@ -1,0 +1,8 @@
+- name: "Configure ssl on agents"
+  hosts: evnfm
+  gather_facts: true
+  become: yes
+  strategy: free
+
+  roles:
+     - role: common-ca

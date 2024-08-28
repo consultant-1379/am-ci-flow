@@ -1,0 +1,21 @@
+- name: "Check EKE"
+  shell: "eke version"
+  register: eke_check
+  ignore_errors: true
+  changed_when: false
+
+- name: "Install eke"
+  shell: "{{ item }}"
+  with_items:
+    - "wget {{ eks_url }}"
+    - "chmod +x /tmp/eke"
+    - "mv /tmp/eke /usr/bin/eke"
+  args:
+    warn: false
+    chdir: "/tmp"
+  when: eke_check.stderr
+
+- name: "EKE status"
+  debug:
+    msg: "EKE version: {{ eke_check.stdout }}"
+  when: eke_check.stdout

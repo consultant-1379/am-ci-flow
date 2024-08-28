@@ -1,0 +1,82 @@
+{
+    "description": "This pipeline is maintained by spinnaker as a code, any changes made through the ui will be overwritten. Template name: functional_testing in repo am-ci-flow",
+    "schema": "1",
+    "spelEvaluator": "v4",
+    "parameterConfig": [
+        {
+            "name": "HOST_VNFM",
+            "default": "",
+            "description": "",
+            "hasOptions": false,
+            "options": [
+                { "value": ""}
+            ],
+            "pinned": false,
+            "required": true
+        },
+        {
+            "name": "HOST_IAM",
+            "default": "",
+            "description": "",
+            "hasOptions": false,
+            "options": [
+                { "value": "" }
+            ],
+            "pinned": false,
+            "required": true
+        },
+        {
+            "name": "HOST_HELM",
+            "default": "",
+            "description": "",
+            "hasOptions": false,
+            "options": [
+                { "value": "" }
+            ],
+            "pinned": false,
+            "required": true
+        },
+        {
+            "name": "CLUSTER",
+            "default": "flex",
+            "description": "",
+            "hasOptions": false,
+            "options": [
+                { "value": "" }
+            ],
+            "pinned": false,
+            "required": true
+        },
+        {
+            "default": "",
+            "description": "",
+            "hasOptions": false,
+            "name": "NAMESPACE",
+            "options": [
+                { "value": "" }
+            ],
+            "pinned": false,
+            "required": true
+        }
+    ],
+    "stages": [
+        {
+            "name": "E-VNFM_TestNG",
+            "refId": "1",
+            "continuePipeline": false,
+            "failPipeline": true,
+            "type": "jenkins",
+            "master": "dss-aispinn-fem4s11-eiffel052",
+            "job": "E-VNFM_TestNG",
+            "parameters": {
+                "HOST_VNFM": "${trigger['parameters']['HOST_VNFM']}",
+                "HOST_IAM": "${trigger['parameters']['HOST_IAM']}",
+                "HOST_HELM": "${trigger['parameters']['HOST_HELM']}",
+                "IDAM_USERNAME": "vnfm",
+                "IDAM_PASSWORD": "Ericsson123!",
+                "CLUSTER": "${trigger['parameters']['CLUSTER']}",
+                "NAMESPACE": "${trigger['parameters']['NAMESPACE']}"
+            }
+        }
+    ]
+}

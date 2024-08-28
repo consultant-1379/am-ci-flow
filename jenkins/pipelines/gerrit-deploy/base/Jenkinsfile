@@ -1,0 +1,115 @@
+#!/usr/bin/env groovy
+
+@Library('jenkins-shared-libs')
+import static com.ericsson.orchestration.mgmt.libs.VnfmJenkins.getAgentLabel
+import static com.ericsson.orchestration.mgmt.libs.VnfmJenkins.getSeedJobName
+
+
+// Stages template
+def stages = [:]
+// Set Agent label
+env.SEED_JOB = getSeedJobName(JOB_NAME)
+String label = getAgentLabel( type: 'deploy',
+                              project: env.SEED_JOB,
+                              topic: params.GERRIT_TOPIC,
+                              this)
+String testsLabel = getAgentLabel(type: 'ews',
+                                  this)
+
+
+node(label) {
+    try {
+        // Set Job's ENVs
+        env.JOB_TYPE = 'gerrit'
+        env.GLOBAL_VAR_PATH = 'jenkins/global.var'
+        env.VAR_PATH = 'jenkins/' + env.SEED_JOB + '/project.var'
+        env.GERRIT_BRANCH = params.GERRIT_BRANCH ?: 'master'
+        env.GERRIT_REFSPEC = params.GERRIT_REFSPEC ?: 'refs/heads/master'
+
+
+        // Run Prepare Stage
+        stage('Prepare') {
+            println('INFO: Checkout CI code...')
+            checkout(scm)
+
+            println('INFO: Load Global vars...')
+            load(env.GLOBAL_VAR_PATH)
+
+            println('INFO: Load Project vars...')
+            load(env.VAR_PATH)
+
+            println('INFO: Load Stages...')
+            stages['git'] = load(env.GIT_STAGE)
+            stages['envs'] = load(env.ENVS_STAGE)
+            stages['build'] = load(env.BUILD_STAGE)
+            stages['docker'] = load(env.DOCKER_STAGE)
+            stages['helm'] = load(env.HELM_STAGE)
+            stages['deploy-app'] = load(env.DEPLOY_APP_STAGE)
+            stages['ua-tests'] = load(env.UA_TESTS_STAGE)
+            stages['post'] = load(env.POST_STAGE)
+            stages['clean'] = load(env.CLEAN_STAGE)
+        }
+
+        // Run Checkout Project Stage
+        stages['git'].CheckoutProject(project: env.GERRIT_PROJECT,
+                                      branch: env.GERRIT_BRANCH,
+                                      refspec: env.GERRIT_REFSPEC,
+                                      type: 'change')
+
+        // Run Update Job ENVs Stage
+        stages['envs'].Update(project: env.GERRIT_PROJECT,
+                              pom: env.POM_FILE)
+
+        // Run Update POM files Stage
+        stages['build'].UpdatePOM(env.GERRIT_PROJECT)
+
+        // Run Build Stage
+        stages['build'].BuildMaven( project: env.GERRIT_PROJECT,
+                                    pom: env.POM_FILE)
+
+        // Run Build Image Stage
+        stages['docker'].BuildImage(name: env.GERRIT_PROJECT)
+
+        node(testsLabel) {
+            // Run Checkout Project Stage
+            stages['git'].CheckoutProject(project: env.GERRIT_PROJECT,
+                                          branch: env.GERRIT_BRANCH,
+                                          refspec: env.GERRIT_REFSPEC,
+                                          type: 'change')
+
+            // Run Image Design Rule Check Stage
+            stages['docker'].DesignRuleCheck(name: env.GERRIT_PROJECT)
+
+            // Run Clean Docker DR Agent Stage
+            stages['clean'].CleanBuild(stage: 'Clean Docker DR Agent')
+        }
+
+        // Run Package Helm Chart Stage
+        stages['helm'].PackageChart(project: env.GERRIT_PROJECT,
+                                    folder: env.CHART_FOLDER)
+
+        // Run Design Rule Check Stage
+        stages['helm'].DesignRuleCheck(project: env.GERRIT_PROJECT)
+
+        if(env.GERRIT_PROJECT != 'gr-controller') {
+            // Run Prepare Deploy Stage
+            stages['deploy-app'].Prepare(project: env.GERRIT_PROJECT)
+
+            // Run Deploy Stage
+            stages['deploy-app'].Deploy(name: env.GERRIT_PROJECT)
+
+            // Run Acceptance Tests Stage
+            stages['ua-tests'].MavenTests(name: env.GERRIT_PROJECT)
+        }
+
+    } catch (Exception errJob) {
+        println(errJob)
+        currentBuild.result = 'FAILURE'
+    } finally {
+        // Run Post Actions Stage
+        stages['post'].GerritDeploy(status: currentBuild.result ?: 'SUCCESS')
+
+        // Run Clean Stage
+        stages['clean'].CleanBuild(deleteDeploy: true)
+    }
+}

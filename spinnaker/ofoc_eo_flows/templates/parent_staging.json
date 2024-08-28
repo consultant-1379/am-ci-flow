@@ -1,0 +1,333 @@
+{
+    "description": "This pipeline is maintained by spinnaker as a code, any changes made through the ui will be overwritten. Template name: parent_staging from the repository am-ci-flow in the directory spinnaker/ofoc_eo_flows/templates",
+    "schema": "1",
+    "spelEvaluator": "v4",
+    "parameterConfig": [
+        {
+            "name": "TRIGGER",
+            "default": "",
+            "description": "",
+            "hasOptions": false,
+            "pinned": false,
+            "required": false
+        },
+        {
+            "name": "CHART_NAME",
+            "default": "",
+            "description": "Application chart name",
+            "label": "CHART_NAME",
+            "hasOptions": false,
+            "pinned": true,
+            "required": true
+        },
+        {
+            "name": "CHART_REPO",
+            "default": "",
+            "description": "Application chart repo",
+            "label": "CHART_REPO",
+            "hasOptions": false,
+            "pinned": true,
+            "required": true
+        },
+        {
+            "name": "CHART_VERSION",
+            "default": "",
+            "description": "Application chart version",
+            "label": "CHART_VERSION",
+            "hasOptions": false,
+            "pinned": true,
+            "required": true
+        },
+        {
+            "name": "II_INT_CHART_NAME",
+            "default": "",
+            "description": "Integration chart name",
+            "label": "II_INT_CHART_NAME",
+            "hasOptions": false,
+            "pinned": true,
+            "required": true
+        },
+        {
+            "name": "II_INT_CHART_REPO",
+            "default": "",
+            "description": "Integration chart repo",
+            "label": "II_INT_CHART_REPO",
+            "hasOptions": false,
+            "pinned": true,
+            "required": true
+        },
+        {
+            "name": "II_INT_CHART_VERSION",
+            "default": "",
+            "description": "Integration chart version",
+            "label": "II_INT_CHART_VERSION",
+            "hasOptions": false,
+            "pinned": true,
+            "required": true
+        },
+        {
+            "name": "SKIP_PRE_TESTING",
+            "default": "true",
+            "description": "Skip Pre-Testing",
+            "label": "SKIP_PRE_TESTING",
+            "hasOptions": false,
+            "pinned": true,
+            "required": true
+        },
+        {
+            "name": "SKIP_CHART_RELEASE",
+            "default": "false",
+            "description": "",
+            "label": "SKIP_CHART_RELEASE",
+            "hasOptions": false,
+            "pinned": true,
+            "required": true
+        },
+        {
+            "name": "GERRIT_REFSPEC",
+            "default": "",
+            "description": "Gerrit REF Spec is used by Inca to pull down a code review to build a new OSS Common Base",
+            "hasOptions": false,
+            "pinned": true,
+            "required": false
+        },
+        {
+            "name": "GIT_COMMIT_SUMMARY",
+            "default": "",
+            "description": "Summary of the GIT commit",
+            "hasOptions": false,
+            "pinned": false,
+            "required": false
+        },
+        {
+            "name": "GERRIT_CHANGE_URL",
+            "default": "",
+            "description": "URL associated with the gerrit change",
+            "hasOptions": false,
+            "pinned": false,
+            "required": false
+        },
+        {
+            "name": "RCR_TAG",
+            "default": "EO_APP_Staging",
+            "description": "EOA Tag is used to identify the environment by Report Center Registration Stage. Dashboard link: https://data-analytics-kibana.ews.gic.ericsson.se/s/eo/app/dashboards#/view/ffd5df70-f626-11ed-9a45-c5fa81db13d3?_g=(filters:!())",
+            "hasOptions": false,
+            "pinned": true,
+            "required": false
+        }
+    ],
+    "stages": [
+        {
+            "name": "OFOC",
+            "refId": "1",
+            "requisiteStageRefIds": [],
+            "completeOtherBranchesThenFail": false,
+            "continuePipeline": true,
+            "failPipeline": false,
+            "waitForCompletion": true,
+            "type": "pipeline",
+            "application": "oss-function-orchestration-common-e2e-cicd",
+            "pipeline": "5abd4b28-8a5e-4d33-8a2f-4b70431225fe",
+            "pipelineParameters": {
+                "CHART_NAME": "${trigger['parameters']['CHART_NAME']}",
+                "CHART_REPO": "${trigger['parameters']['CHART_REPO']}",
+                "CHART_VERSION": "${trigger['parameters']['CHART_VERSION']}",
+                "GERRIT_REFSPEC": "${trigger['parameters']['GERRIT_REFSPEC']}"
+            }
+        },
+        {
+            "name": "Report Center Registration",
+            "refId": "Report_Center_Registration",
+            "requisiteStageRefIds": [],
+            "continuePipeline": true,
+            "failPipeline": false,
+            "waitForCompletion": false,
+            "type": "jenkins",
+            "master": "oss-fem4s11-eiffel216",
+            "job": "Staging-Report-Register",
+            "parameters": {
+                "EXEC_ID": "${execution.id}"
+            }
+        },
+        {
+            "name": "VMVNFM",
+            "refId": "2",
+            "requisiteStageRefIds": [
+                "13"
+            ],
+            "completeOtherBranchesThenFail": false,
+            "continuePipeline": true,
+            "failPipeline": false,
+            "waitForCompletion": true,
+            "type": "pipeline",
+            "application": "oss-function-orchestration-common-e2e-cicd",
+            "pipeline": "5abd4b28-8a5e-4d33-8a2f-4b70431225fe",
+            "pipelineParameters": {
+                "CHART_NAME": "${trigger['parameters']['CHART_NAME']}",
+                "CHART_REPO": "${trigger['parameters']['CHART_REPO']}",
+                "CHART_VERSION": "${trigger['parameters']['CHART_VERSION']}",
+                "GERRIT_REFSPEC": "${trigger['parameters']['GERRIT_REFSPEC']}",
+                "TAGS": "eoVmvnfm"
+            }
+        },
+        {
+            "name": "OFOC_Functional_Testing",
+            "refId": "3",
+            "requisiteStageRefIds": [
+                "1"
+            ],
+            "completeOtherBranchesThenFail": false,
+            "continuePipeline": true,
+            "failPipeline": false,
+            "waitForCompletion": true,
+            "type": "pipeline",
+            "application": "oss-function-orchestration-common-e2e-cicd",
+            "pipeline": "3e133d8f-a9b0-4252-b016-7a3f07603af8",
+            "pipelineParameters": {
+                "HOST_VNFM": "${#stage('OFOC')['context']['EO_VNFM_HOSTNAME_ICCR']}",
+                "HOST_IAM": "${#stage('OFOC')['context']['IAM_HOSTNAME_ICCR']}",
+                "HOST_HELM": "${#stage('OFOC')['context']['EO_HELM_REGISTRY_HOSTNAME_ICCR']}",
+                "CLUSTER": "${#stage('OFOC')['context']['CLUSTER']}",
+                "NAMESPACE": "${#stage('OFOC')['context']['NAMESPACE']}"
+            },
+            "stageEnabled": {
+                "expression": "${#stage('OFOC')['status'].toString() == 'SUCCEEDED' and parameters['CHART_NAME'] != 'eric-eo-batch-manager' and parameters['CHART_NAME'] != 'eric-gr-bur-orchestrator'}",
+                "type": "expression"
+            }
+        },
+        {
+            "name": "Cleanup OFOC Namespace",
+            "refId": "8",
+            "requisiteStageRefIds": [
+                "3"
+            ],
+            "continuePipeline": false,
+            "failPipeline": true,
+            "waitForCompletion": false,
+            "type": "jenkins",
+            "master": "dss-aispinn-fem4s11-eiffel052",
+            "job": "E-VNFM_Unlock-Environment",
+            "parameters": {
+                "ENV_NAME": "${#stage('OFOC')['context']['RESOURCE_NAME']}"
+            }
+        },
+        {
+            "name": "Cleanup VMVNFM Namespace",
+            "refId": "9",
+            "requisiteStageRefIds": [
+                "2"
+            ],
+            "continuePipeline": false,
+            "failPipeline": true,
+            "waitForCompletion": false,
+            "type": "jenkins",
+            "master": "dss-aispinn-fem4s11-eiffel052",
+            "job": "E-VNFM_Unlock-Environment",
+            "parameters": {
+                "ENV_NAME": "${#stage('VMVNFM')['context']['RESOURCE_NAME']}"
+            }
+        },
+        {
+            "name": "Fetch Build Upload Release",
+            "refId": "6",
+            "requisiteStageRefIds": [
+                "1",
+                "2",
+                "3"
+            ],
+            "completeOtherBranchesThenFail": false,
+            "continuePipeline": true,
+            "failPipeline": false,
+            "type": "jenkins",
+            "master": "oss-aispinn-fem5s11-eiffel052",
+            "job": "OSS-CI-Fetch-Build-Upload",
+            "parameters": {
+                "ALLOW_DOWNGRADE": "false",
+                "ARMDOCKER_USER_SECRET": "ossapps100-arm-docker-auth-config",
+                "AUTOMATIC_RELEASE": "false",
+                "CHART_NAME": "${#stage('OFOC')['context']['pipelineParameters']['CHART_NAME']}",
+                "CHART_PATH": "charts/eric-oss-function-orchestration-common",
+                "CHART_REPO": "${#stage('OFOC')['context']['pipelineParameters']['CHART_REPO']}",
+                "CHART_VERSION": "${#stage('OFOC')['context']['pipelineParameters']['CHART_VERSION']}",
+                "GERRIT_PREPARE_OR_PUBLISH": "publish",
+                "GERRIT_REFSPEC": "${parameters['GERRIT_REFSPEC']}",
+                "GERRIT_USER_SECRET": "ossapps100-user-creds",
+                "GIT_REPO_URL": "https://gerrit-gamma.gic.ericsson.se/a/OSS/com.ericsson.oss.ro/eric-oss-function-orchestration-common.git",
+                "HELM_DROP_REPO": "https://arm.seli.gic.ericsson.se/artifactory/proj-eo-evnfm-drop-helm",
+                "HELM_INTERNAL_REPO": "https://arm.seli.gic.ericsson.se/artifactory/proj-eo-evnfm-drop-helm",
+                "HELM_RELEASED_REPO": "https://arm.seli.gic.ericsson.se/artifactory/proj-eo-evnfm-drop-helm",
+                "HELM_REPO_CREDENTIALS_ID": "ossapps100_helm_repository_creds_file",
+                "VCS_BRANCH": "master",
+                "WAIT_SUBMITTABLE_BEFORE_PUBLISH": "false"
+            },
+            "propertyFile": "artifact.properties",
+            "stageEnabled": {
+                "expression": "${(#stage('OFOC_Functional_Testing')['status'].toString() == 'SUCCEEDED' or #stage('OFOC_Functional_Testing')['status'].toString() == 'SKIPPED') and (#stage('VMVNFM')['status'].toString() == 'SUCCEEDED' and #stage('OFOC')['status'].toString() == 'SUCCEEDED') and parameters['SKIP_CHART_RELEASE'].toString() == 'false'}",
+                "type": "expression"
+            }
+        },
+        {
+            "name": "Flow Completed",
+            "refId": "7",
+            "requisiteStageRefIds": [
+                "6",
+                "8",
+                "9"
+            ],
+            "type": "checkPreconditions",
+            "preconditions": [
+                {
+                    "type": "expression",
+                    "context": {
+                        "expression": "${#stage('Fetch Build Upload Release')['status'].toString() == 'SUCCEEDED' or #stage('Fetch Build Upload Release')['status'].toString() == 'SKIPPED'}",
+                        "failureMessage": "Failed to release App Chart from microservice change"
+                    },
+                    "failPipeline": true
+                },
+                {
+                    "type": "expression",
+                    "context": {
+                        "expression": "${#stage('OFOC_Functional_Testing')['status'].toString() == 'SUCCEEDED' or #stage('OFOC_Functional_Testing')['status'].toString() == 'SKIPPED'}",
+                        "failureMessage": "OFOC testing failed"
+                    },
+                    "failPipeline": true
+                },
+                {
+                    "type": "expression",
+                    "context": {
+                        "expression": "${#stage('OFOC')['status'].toString() == 'SUCCEEDED'}"
+                    },
+                    "failPipeline": true
+                },
+                {
+                    "type": "expression",
+                    "context": {
+                        "expression": "${#stage('VMVNFM')['status'].toString() == 'SUCCEEDED'}"
+                    },
+                    "failPipeline": true
+                },
+                {
+                    "type": "expression",
+                    "context": {
+                        "expression": "${#stage('Cleanup OFOC Namespace')['status'].toString() == 'SUCCEEDED' or #stage('Cleanup OFOC Namespace')['status'].toString() == 'SKIPPED'}"
+                    },
+                    "failPipeline": true
+                },
+                {
+                    "type": "expression",
+                    "context": {
+                        "expression": "${#stage('Cleanup VMVNFM Namespace')['status'].toString() == 'SUCCEEDED' or #stage('Cleanup VMVNFM Namespace')['status'].toString() == 'SKIPPED'}"
+                    },
+                    "failPipeline": true
+                }
+            ]
+        },
+        {
+            "name": "Wait",
+            "refId": "13",
+            "requisiteStageRefIds": [],
+            "type": "wait",
+            "waitTime": 360
+        }
+    ]
+}

@@ -1,0 +1,72 @@
+#!/usr/bin/env groovy
+
+@Library('jenkins-shared-libs')
+import static com.ericsson.orchestration.mgmt.libs.VnfmJenkins.getAgentLabel
+import static com.ericsson.orchestration.mgmt.libs.VnfmJenkins.getSeedJobName
+
+
+// Stages template
+def stages = [:]
+// Set Agent label
+String label = getAgentLabel( type: 'concurrent',
+                              this)
+
+
+node(label) {
+    try {
+        // Set Job's ENVs
+        env.SEED_JOB = getSeedJobName(JOB_NAME)
+        env.JOB_TYPE = 'unlock-env'
+        env.GLOBAL_VAR_PATH = 'jenkins/global.var'
+        env.VAR_PATH = 'jenkins/' + env.SEED_JOB + '/project.var'
+        env.ENV_NAME = params.ENV_NAME
+
+
+        // Run Prepare Stage
+        stage('Prepare') {
+            println('INFO: Checkout CI code...')
+            checkout(scm)
+
+            println('INFO: Load Global vars...')
+            load(env.GLOBAL_VAR_PATH)
+
+            println('INFO: Load Project vars...')
+            load(env.VAR_PATH)
+
+            println('INFO: Load Stages...')
+            gitStage = load(env.GIT_STAGE)
+            envsStage = load(env.ENVS_STAGE)
+            cleanStage = load(env.CLEAN_STAGE)
+            runJobStage = load(env.RUN_JOB_STAGE)
+
+            println('INFO: Update Build Short text...')
+            addShortText( background: '',
+                          borderColor: 'white',
+                          text: env.ENV_NAME)
+        }
+
+        // Run Checkout Stage
+        gitStage.CheckoutProject( project: env.INTEGRATION_CI_PROJECT,
+                                  branch: env.INTEGRATION_CI_BRANCH)
+
+        // Run Update ENVs Stage
+        envsStage.RunUpdateEVNFM(env.INTEGRATION_CI_PROJECT, env.ENV_NAME)
+
+        // Run Clean Stage
+        cleanStage.RunCleanEVNFM()
+
+        // Run Unreserve Job
+        Boolean skip = !(env.ENV_NAME && env.NAMESPACE)
+        def unreserveParams = []
+        unreserveParams.add(name: 'ENV_NAME', value: env.ENV_NAME)
+        runJobStage.LocalJob( name: env.UNRESERVE_JOB,
+                              params: unreserveParams,
+                              skip: skip)
+
+    } catch (Exception errJob) {
+        println(errJob)
+        currentBuild.result = 'FAILURE'
+    } finally {
+        cleanWs()
+    }
+}

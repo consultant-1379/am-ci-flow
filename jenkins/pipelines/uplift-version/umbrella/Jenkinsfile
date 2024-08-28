@@ -1,0 +1,95 @@
+#!/usr/bin/env groovy
+
+@Library('jenkins-shared-libs')
+import static com.ericsson.orchestration.mgmt.libs.VnfmJenkins.getAgentLabel
+import static com.ericsson.orchestration.mgmt.libs.VnfmJenkins.getSeedJobName
+import static com.ericsson.orchestration.mgmt.libs.VnfmGerrit.checkBranch
+
+
+// Stages template
+def stages = [:]
+// Set Agent label
+String label = getAgentLabel( type: 'concurrent',
+                              this)
+
+
+node(label) {
+    try {
+        // Set Job's ENVs
+        env.SEED_JOB = getSeedJobName(JOB_NAME)
+        env.JOB_TYPE = 'release'
+        env.GLOBAL_VAR_PATH = 'jenkins/global.var'
+        env.VAR_PATH = 'jenkins/' + env.SEED_JOB + '/project.var'
+        env.SPRINT_NUMBER = params.SPRINT_NUMBER
+        env.BRANCH = env.SPRINT_NUMBER + '_track'
+
+
+        // Run Prepare Stage
+        stage('Prepare') {
+            println('INFO: Checkout CI code...')
+            checkout(scm)
+
+            println('INFO: Load Global vars...')
+            load(env.GLOBAL_VAR_PATH)
+
+            println('INFO: Load Project vars...')
+            load(env.VAR_PATH)
+
+            println('INFO: Load Stages...')
+            stages['git'] = load(env.GIT_STAGE)
+            stages['envs'] = load(env.ENVS_STAGE)
+            stages['run-job'] = load(env.RUN_JOB_STAGE)
+            stages['post'] = load(env.POST_STAGE)
+
+            currentBuild.description = '<p>Sprint: ' + env.SPRINT_NUMBER + '</p>'
+        }
+
+        // Run Checkout Project Stage
+        stages['git'].CheckoutProject(project: env.EO_HELMFILE_PROJECT,
+                                      branch: env.BRANCH)
+
+        // Run Get Dependency ENVs stage
+        stages['envs'].GetDependencyEnv(project: env.GERRIT_PROJECT,
+                                        branch: env.BRANCH)
+
+        // Run Checkout Project Stage
+        stages['git'].CheckoutProject(project: env.GERRIT_PROJECT,
+                                      branch: 'master',
+                                      type: 'tag',
+                                      tag: env.DEPENDENCY_VERSION)
+
+        // Run Create Branch Stage
+        Boolean skipRelease = checkBranch(project: env.GERRIT_PROJECT,
+                                          branch: env.BRANCH,
+                                          url: GERRIT_HTTP_URL,
+                                          this)
+        stages['git'].CreateBranch( project: env.GERRIT_PROJECT,
+                                    branch: env.BRANCH,
+                                    skip: skipRelease)
+
+        // Run Release Job: env.BRANCH
+        def releaseParams = []
+        releaseParams.add(name: 'BRANCH', value: env.BRANCH)
+        releaseParams.add(name: 'TYPE', value: 'release')
+        stages['run-job'].LocalJob( name: env.RELEASE_JOB,
+                                    params: releaseParams,
+                                    stage: env.RELEASE_JOB + ': sprint',
+                                    skip: skipRelease)
+
+        // Run Release Job: master
+        def minorParams = []
+        minorParams.add(name: 'BRANCH', value: 'master')
+        minorParams.add(name: 'TYPE', value: 'minor')
+        stages['run-job'].LocalJob( name: env.RELEASE_JOB,
+                                    params: minorParams,
+                                    stage: env.RELEASE_JOB + ': master',
+                                    skip: skipRelease)
+
+    } catch (Exception errJob) {
+        println(errJob)
+        currentBuild.result = 'FAILURE'
+    } finally {
+        // Run Post Actions Stage
+        stages['post'].Base(status: currentBuild.result ?: 'SUCCESS')
+    }
+}

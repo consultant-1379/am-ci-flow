@@ -1,0 +1,155 @@
+global:
+  hosts:
+    so: "so.dummy.hostname.com"
+    iam: "iam.dummy.hostname.com"
+    vnfm: "vnfm.dummy.hostname.com"
+    pf: "pf.dummy.hostname.com"
+    uds: "uds.dummy.hostname.com"
+    gr: "gr.dummy.hostname.com"
+    gas: "gas.dummy.hostname.com"
+  registry:
+    url: "registry.dummy.hostname.com"
+    username: "admin"
+    password: "ericsson"
+  pullSecret: "k8s-registry-secret"
+  support:
+    ipv6:
+      enabled: false
+  timezone: UTC
+  createClusterRoles: true
+  ingressClass: "eo_iccr"
+  iccrAppIngresses: false
+  geo-redundancy:
+    enabled: false
+
+system-user:
+  credentials:
+    username: "system-user"
+    password: "Ericsson123!"
+defaultUser:
+    username: "vnfm-user"
+    password: "Ericsson123!"
+eric-lcm-container-registry:
+  ingress:
+    hostname: "registry.vnfm.dummy.hostname.com"
+  persistence:
+    persistentVolumeClaim:
+      size: "450Gi"
+eric-lcm-helm-chart-registry:
+  ingress:
+    enabled: false
+    hostname: "helmregistry.vnfm.dummy.hostname.com"
+  env:
+    secret:
+      BASIC_AUTH_USER:
+      BASIC_AUTH_PASS:
+eric-vnfm-orchestrator-service:
+  oss:
+    topology:
+      secretName: null
+  smallstack:
+    application: true
+tags:
+  eoEvnfm: true
+  eoVmvnfm: false
+  eoSo: false
+  eoPf: false
+  eoUds: false
+eric-tm-ingress-controller-cr:
+  enabled: false
+  service:
+    loadBalancerIP: "127.0.0.1"
+    externalTrafficPolicy: "Local"
+  ingressClass: "eo_iccr"
+  rbac:
+    create: false
+eric-sec-access-mgmt:
+  ingress:
+    hostname: "keycloak.dummy.hostname.com"
+  replicaCount: 2
+eric-eo-evnfm:
+  eric-lcm-container-registry:
+    ingress:
+      hostname: "registry.vnfm.dummy.hostname.com"
+    persistence:
+      persistentVolumeClaim:
+        size: "450Gi"
+  eric-lcm-helm-chart-registry:
+    ingress:
+      enabled: false
+      hostname: "helmregistry.vnfm.dummy.hostname.com"
+    env:
+      secret:
+        BASIC_AUTH_USER:
+        BASIC_AUTH_PASS:
+  eric-vnfm-orchestrator-service:
+    oss:
+      topology:
+        secretName: null
+    smallstack:
+      application: true
+eric-eo-evnfm-nbi:
+  eric-evnfm-rbac:
+    defaultUser:
+      username: "vnfm"
+      password: "vnfm"
+eric-oss-uds:
+  defaultUser:
+    username: "uds"
+    password: "uds"
+eric-eo-evnfm-vm:
+  eric-vm-vnfm-migration:
+    migration:
+      enabled: true
+  eric-vnflcm-service:
+    oss:
+      secretName: null
+    persistentVolumeClaim:
+      size: 20Gi
+    service:
+      enabled: true
+      loadBalancerIP: "131.161.25.23"
+      externalTrafficPolicy: "Local"
+eric-eo-so:
+  defaultUser:
+    username: "so-user"
+    password: "Ericsson123!"
+eric-oss-pf:
+  defaultUser:
+    username: "pf-user"
+    password: "Ericsson123!"
+gas:
+  defaultUser:
+    username: "gas-user"
+    password: "Ericsson123!"
+eric-ctrl-bro:
+  persistence:
+    persistentVolumeClaim:
+      size: "20Gi"
+  sftp:
+    username: "dummy"
+    password: "dummy"
+eric-data-search-engine:
+  service:
+    network:
+      protocol:
+        IPv6: true
+
+eric-gr-bur-orchestrator:
+  credentials:
+    username: "dummy"
+    password: "dummy"
+  gr:
+    bro:
+      autoDelete:
+        backupsLimit: 10
+    sftp:
+      url: "dummy:22/path/"
+      username: "dummy"
+      password: "dummy"
+    cluster:
+      role: "PRIMARY"
+      secondary_hostnames:
+        - "dummy"
+    registry:
+      secondarySiteContainerRegistryHostname: dummy

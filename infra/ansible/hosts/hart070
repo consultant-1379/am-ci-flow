@@ -1,0 +1,5 @@
+[hart070]
+10.158.164.[52:67]
+
+[k8s_nodes:children]
+hart070

@@ -1,0 +1,62 @@
+#!/usr/bin/env groovy
+
+@Library('jenkins-shared-libs')
+import static com.ericsson.orchestration.mgmt.libs.VnfmJenkins.getAgentLabel
+import static com.ericsson.orchestration.mgmt.libs.VnfmJenkins.getSeedJobName
+
+
+// Stages template
+def stages = [:]
+// Set Agent label
+String label = getAgentLabel( type: 'ews',
+                              this)
+
+
+node(label) {
+    try {
+        // Set Job's ENVs
+        env.SEED_JOB = getSeedJobName(JOB_NAME)
+        env.GLOBAL_VAR_PATH = 'jenkins/global.var'
+        env.VAR_PATH = 'jenkins/' + env.SEED_JOB + '/project.var'
+        env.VARS_DIR_PATH = 'jenkins/' + env.SEED_JOB + '/vars/'
+
+
+        // Run Prepare Stage
+        stage('Prepare') {
+            println('INFO: Checkout CI code...')
+            checkout(scm)
+
+            println('INFO: Load Global vars...')
+            load(env.GLOBAL_VAR_PATH)
+
+            println('INFO: Load Project vars...')
+            load(env.VAR_PATH)
+
+            println('INFO: Load Stages...')
+            stages['config'] = load(env.CONFIG_STAGE)
+            stages['clean'] = load(env.CLEAN_STAGE)
+        }
+
+        // Run Setup Kubernetes Plugin Stage
+        def clusters = readYaml(file: env.VARS_DIR_PATH + env.KUBERNETES_CLUSTERS_VAR)
+        for(Map cluster in clusters) {
+            stages['config'].SetupKubernetesPlugin( name: cluster['name'],
+                                                    params: cluster)
+        }
+
+        // Run Setup Agent Labels Stage
+        def labels = readYaml(file: env.VARS_DIR_PATH + env.AGENT_LABELS_VAR)
+        stages['config'].SetupAgentLabels(labels: labels)
+
+        // Run Setup Global Environment Variables Stage
+        def variables = readYaml(file: env.VARS_DIR_PATH + env.JENKINS_GLOBAL_VARIABLES_VAR)
+        stages['config'].SetupGlobalVariables(vars: variables)
+
+    } catch (Exception errJob) {
+        println(errJob)
+        currentBuild.result = 'FAILURE'
+    } finally {
+        // Run Clean Stage
+        stages['clean'].CleanBuild()
+    }
+}

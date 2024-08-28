@@ -1,0 +1,88 @@
+global:
+  hosts:
+    so: ""
+    sdd: ""
+    iam: "keycloak.dummy.hahn061.rnd.gic.ericsson.se"
+    wano: ""
+    vnfm: "evnfm.dummy.hahn061.rnd.gic.ericsson.se"
+  registry:
+    # If deploying from the director node on a CCD environment, the url can be retrieved using:
+    # kubectl get ingress eric-lcm-container-registry-ingress -n kube-system -o jsonpath="{.spec.tls[*].hosts[0]}"; echo
+    url: "armdocker.rnd.ericsson.se"
+    # kubectl get secrets cr-registry-credentials -n kube-system -o jsonpath="{.data.custom-user}" | base64 -d; echo
+    username: "user"
+    # kubectl get secrets cr-registry-credentials -n kube-system -o jsonpath="{.data.custom-pass}" | base64 -d; echo
+    password: "password"
+    pullSecret: "docker-reg-creds"
+  support:
+    ipv6:
+      enabled: false
+  timezone: UTC
+tags:
+  eoEvnfm: true
+  eoVmvnfm: false
+  eoSo: false
+  eoWano: false
+  onboarding: true
+  ui: false
+  # If turning on wfs or orchestrator please ensure eric-eo-evnfm-mb is also set to true
+  wfs: false
+  orchestrator: false
+eric-eo-evnfm-mb:
+  enabled: false
+
+eric-sec-access-mgmt:
+  ingress:
+    hostname: "keycloak.dummy.hahn061.rnd.gic.ericsson.se"
+
+# Fill only if deploying EO Container VNFM (EO EVNFM)
+eric-eo-evnfm:
+  eric-lcm-container-registry:
+    ingress:
+      hostname: "registry.dummy.hahn061.rnd.gic.ericsson.se"
+    registry:
+      volumes:
+        data:
+          size: "50Gi"
+    brAgent:
+      enabled: false
+  application-manager-postgres:
+    brAgent:
+      enabled: false
+    highAvailability:
+      replicaCount: 1
+  eric-lcm-helm-chart-registry:
+    brAgent:
+      enabled: false
+
+idam-database-pg:
+  highAvailability:
+    replicaCount: 1
+  brAgent:
+    enabled: false
+
+eric-eo-eai-database-pg:
+  brAgent:
+    enabled: false
+
+backup-controller:
+  enabled: false
+
+eric-eo-usermgmt:
+  replicas: 0
+
+eric-eo-usermgmt-ui:
+  replicas: 0
+
+eric-eo-evnfm-nbi:
+  replicaCount: 1
+  eric-evnfm-rbac:
+    defaultUser:
+      username: vnfm
+      password: Ericsson123!
+
+logging:
+  enabled: false
+
+eric-pm-server:
+  enabled: false

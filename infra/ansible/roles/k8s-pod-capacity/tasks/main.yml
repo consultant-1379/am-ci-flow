@@ -1,0 +1,79 @@
+- name: "Read Kubelet config"
+  slurp:
+    src: "/var/lib/kubelet/config.yaml"
+  register: kubelet_config
+  tags:
+    - pods_capacity
+
+- name: "Convert kubelet_config variable to Yaml"
+  set_fact:
+    kubelet_config: "{{ kubelet_config['content'] | b64decode | from_yaml }}"
+  tags:
+    - pods_capacity
+
+- name: "Get maxPods value"
+  debug:
+    msg: "{{ kubelet_config['maxPods'] }}"
+  tags:
+    - pods_capacity
+
+- name: "Set maxPods"
+  set_fact:
+    kubelet_config: "{{ kubelet_config | combine({'maxPods': maxPods | int }) }}"
+  when:
+    - "kubelet_config['maxPods']|string != maxPods"
+  tags:
+    - never
+    - pods_capacity
+
+- name: "Get new maxPods value"
+  debug:
+    msg: "{{ kubelet_config['maxPods'] }}"
+  tags:
+    - pods_capacity
+
+- name: "Update Kubelet config file"
+  copy:
+    content: |
+      {{ kubelet_config | to_nice_yaml }}
+    dest: "/var/lib/kubelet/config.yaml"
+    owner: "root"
+    group: "root"
+    mode: "0644"
+  register: kubelet_update
+  tags:
+    - never
+    - pods_capacity
+
+- name: "Restart Kubelete service"
+  systemd:
+    name: "kubelet"
+    daemon_reload: yes
+    state: restarted
+  register: kubelet_status
+  ignore_errors: true
+  when:
+    - kubelet_update['changed']
+  tags:
+    - never
+    - restart
+
+- name: "Kubelet status"
+  debug:
+    msg: "Status: {%- if kubelet_status.failed == False -%} Success {%- else -%} Failed {%- endif -%}"
+  failed_when: "kubelet_status.failed == True"
+  when:
+    - kubelet_update['changed']
+  tags:
+    - never
+    - restart
+
+- name: Sleep for 60 seconds
+  wait_for:
+    timeout: 60
+  when:
+    - "kubelet_config['maxPods']|string != maxPods"
+    - "ansible_play_hosts | length > 1"
+  tags:
+    - never
+    - pods_capacity

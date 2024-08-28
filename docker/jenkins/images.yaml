@@ -1,0 +1,88 @@
+#
+# COPYRIGHT Ericsson 2024
+#
+#
+#
+# The copyright to the computer program(s) herein is the property of
+#
+# Ericsson Inc. The programs may be used and/or copied only with written
+#
+# permission from Ericsson Inc. or in accordance with the terms and
+#
+# conditions stipulated in the agreement/contract under which the
+#
+# program(s) have been supplied.
+#
+
+- name: "base-agent-jdk11"
+  version: "1.4.3"
+  repository: "armdocker.rnd.ericsson.se/proj-am/jenkins"
+  file: "base-agent/Dockerfile"
+  directory: "docker/jenkins"
+  arguments:
+    BASE_IMAGE_VERSION: "4.13.3-1"
+    CONFIGS_DIR: "configs"
+    DOCKER_VERSION: "5:20.10.18~3-0~debian-bullseye"
+    KUBECTL_VERSION: "v1.27.6"
+    HELM_VERSION: "v3.8.2"
+    HELMFILE_VERSION: "0.149.0"
+    SPIN_VERSION: "1.29.0"
+- name: "base-agent-jdk17"
+  version: "1.4.3"
+  repository: "armdocker.rnd.ericsson.se/proj-am/jenkins"
+  file: "base-agent/Dockerfile"
+  directory: "docker/jenkins"
+  arguments:
+    BASE_IMAGE_VERSION: "jdk17"
+    CONFIGS_DIR: "configs"
+    DOCKER_VERSION: "5:20.10.18~3-0~debian-bullseye"
+    KUBECTL_VERSION: "v1.27.6"
+    HELM_VERSION: "v3.8.2"
+    HELMFILE_VERSION: "0.149.0"
+    SPIN_VERSION: "1.29.0"
+- name: "docker-agent"
+  version: "1.1.0"
+  repository: "armdocker.rnd.ericsson.se/proj-am/jenkins"
+  file: "docker-agent/Dockerfile"
+  directory: "docker/jenkins"
+- name: "maven-agent-jdk11"
+  version: "1.0.0"
+  repository: "armdocker.rnd.ericsson.se/proj-am/jenkins"
+  file: "maven-agent/Dockerfile"
+  directory: "docker/jenkins"
+  arguments:
+    BASE_IMAGE_NAME: "base-agent-jdk11"
+    BASE_IMAGE_VERSION: "1.4.3"
+    CONFIGS_DIR: "configs"
+    MAVEN_VERSION: "3.9.3"
+- name: "maven-agent-jdk17"
+  version: "1.4.5"
+  repository: "armdocker.rnd.ericsson.se/proj-am/jenkins"
+  file: "maven-agent/Dockerfile"
+  directory: "docker/jenkins"
+  arguments:
+    BASE_IMAGE_NAME: "base-agent-jdk17"
+    BASE_IMAGE_VERSION: "1.4.3"
+    CONFIGS_DIR: "configs"
+    MAVEN_VERSION: "3.9.3"
+- name: "corretto-agent"
+  version: "1.0.1"
+  repository: "armdocker.rnd.ericsson.se/proj-am/jenkins"
+  file: "corretto-agent/Dockerfile"
+  directory: "docker/jenkins"
+  arguments:
+    CBO_RELEASE_VERSION: "6.3.0-13"
+    CONFIGS_DIR: "configs"
+    MAVEN_VERSION: "3.9.3"
+    KUBECTL_VERSION: "v1.27.6"
+    HELM_VERSION: "v3.8.2"
+    HELMFILE_VERSION: "0.149.0"
+    SPIN_VERSION: "1.29.0"
+- name: "ansible"
+  version: "1.0.2"
+  repository: "armdocker.rnd.ericsson.se/proj-am/jenkins"
+  file: "ansible/Dockerfile"
+  directory: "docker/jenkins"
+  arguments:
+    BASE_IMAGE_VERSION: "1.4.3"
+    ANSIBLE_VERSION: "2.15"

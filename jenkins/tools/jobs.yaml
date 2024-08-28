@@ -1,0 +1,234 @@
+#
+# COPYRIGHT Ericsson 2024
+#
+#
+#
+# The copyright to the computer program(s) herein is the property of
+#
+# Ericsson Inc. The programs may be used and/or copied only with written
+#
+# permission from Ericsson Inc. or in accordance with the terms and
+#
+# conditions stipulated in the agreement/contract under which the
+#
+# program(s) have been supplied.
+#
+
+# Unlock Resource Job
+unlockResource:
+  name: "unlock-resource"
+  description: "Pipeline to unlock the lockable resource"
+  file: "jenkins/tools/unlock-resource/Jenkinsfile"
+  maxLogDays: "14"
+  maxLogBuilds: "30"
+  parallelRun: true
+  enable: true
+  parameters:
+    ENV_NAME:
+      type: "string"
+      value: ""
+      description: "Enter the Environment Name"
+# Lock Resource Job
+lockResource:
+  name: "lock-resource"
+  description: "Pipeline to lock the lockable resource"
+  file: "jenkins/tools/lock-resource/Jenkinsfile"
+  maxLogDays: "30"
+  maxLogBuilds: "60"
+  parallelRun: true
+  enable: true
+  parameters:
+    ENV_LABEL:
+      type: "string"
+      value: ""
+      description: "Enter the Environment Label"
+    SKIP_QUEUE:
+      type: "bool"
+      value: false
+      description: "Lock the environment without a queue"
+    FLOW_URL_TAG:
+      type: "string"
+      value: ""
+      description: "Name for the Flow to be used for the URL to append to the Jenkins Job"
+    FLOW_URL:
+      type: "string"
+      value: ""
+      description: "Pipeline URL"
+    WAIT_TIME:
+      type: "string"
+      value: "60"
+      description: "Time in minutes to wait for resource to become free"
+# Tests CSAR Job
+testsCSAR:
+  name: "Tests_CSAR"
+  description: "Pipeline to build CSAR package for tests"
+  file: "jenkins/tools/tests-csar/Jenkinsfile"
+  maxLogDays: "14"
+  maxLogBuilds: "30"
+  parallelRun: false
+  enable: true
+  parameters:
+    VNFD_DIR:
+      type: "string"
+      value: ""
+      description: "Directory of vnfd. Examlpe: 'csars/tosca_1_2/SOL_2_5_1/basic/basic-app-a/', if keep empty then CSARs for all vnfd in folder 'csar/' would be generated."
+    NO_IMAGES:
+      type: "bool"
+      value: true
+      description: "Build CSAR with images if value false. The parameter working if VNFD_DIR not empty."
+# Uplift Version Job
+upliftVersion:
+  name: "uplift-version"
+  description: "Pipeline to update version into the CVNFM"
+  file: "jenkins/tools/uplift-version/Jenkinsfile"
+  maxLogDays: "60"
+  maxLogBuilds: "20"
+  parallelRun: false
+  enable: true
+# Build CSARs Job
+buildCSARs:
+  name: "build-CSARs"
+  description: "Pipeline for build CSARs"
+  file: "jenkins/tools/build-csar/Jenkinsfile"
+  maxLogDays: "14"
+  maxLogBuilds: "20"
+  parallelRun: false
+  enable: true
+  parameters:
+    CHART_NAME:
+      type: "choice"
+      description: "Chart name"
+    CHART_VERSION:
+      type: "string"
+      value: ""
+      description: "Chart version"
+    TYPE:
+      type: "choice"
+      description: "Choice between simple chart or get charts from eo-helmfile. The type eric-eo-helmfile just for helmfile"
+# Branch Lock Job
+branchlock:
+  name: "branch-lock"
+  description: "Pipeline for locking branches during code freeze"
+  file: "jenkins/tools/branch-lock/Jenkinsfile"
+  maxLogDays: "21"
+  maxLogBuilds: "10"
+  parallelRun: false
+  enable: true
+  parameters:
+    ACTION:
+      type: "choice"
+      description: "Set or Unset exclusive group access to Submit"
+    PROJECT:
+      type: "string"
+      value: "OSS/com.ericsson.orchestration.mgmt/am-ci-flow"
+      description: "Project name to lock"
+    BRANCH:
+      type: "string"
+      value: "refs/heads/master"
+      description: "Project branch to lock"
+    GROUP_ID:
+      type: "string"
+      value: "7c5af132f831ce1df8b95d7a517586f3e23dc92c"
+      description: "Gerrit Group ID which will preserve Submit access"
+# Uplift Child Chart Job
+upliftChildChart:
+  name: "uplift-child-chart"
+  description: "Pipeline for uplift child chart version in umbrella chart"
+  file: "jenkins/tools/uplift-child-chart/Jenkinsfile"
+  maxLogDays: "30"
+  maxLogBuilds: "40"
+  parallelRun: true
+  enable: true
+  parameters:
+    CHART_NAME:
+      type: "string"
+      value: ""
+      description: "The name of the child chart"
+    CHART_VERSION:
+      type: "string"
+      value: ""
+      description: "The version of the child chart"
+    UMBRELLA_PROJECT_NAME:
+      type: "string"
+      value: ""
+      description: "The name of the umbrella project"
+    UMBRELLA_PROJECT_BRANCH:
+      type: "string"
+      value: "master"
+      description: "The branch of the umbrella project"
+    UMBRELLA_CHART_FILE:
+      type: "string"
+      value: "Chart.yaml"
+      description: "Path to the umbrella chart file"
+# Generate Certificates Job
+generateCertificates:
+  name: "generate-certificates"
+  description: "Pipeline to generate SSL certificates"
+  file: "jenkins/tools/generate-certificates/Jenkinsfile"
+  maxLogDays: "14"
+  maxLogBuilds: "30"
+  parallelRun: true
+  enable: true
+  parameters:
+    TYPE:
+      type: "choice"
+      description: "Choice the generated certificates type"
+    DNS_NAME:
+      type: "string"
+      value: ""
+      description: "Root DNS name of the generated certificates"
+# DR Check Job
+drCheck:
+  name: "dr-check"
+  description: "Pipeline to run Desing Rules tests"
+  file: "jenkins/tools/dr-check/Jenkinsfile"
+  maxLogDays: "14"
+  maxLogBuilds: "30"
+  parallelRun: true
+  enable: true
+  parameters:
+    GERRIT_PROJECT:
+      type: "string"
+      value: ""
+      description: "Gerrit project name"
+    GERRIT_BRANCH:
+      type: "string"
+      value: "master"
+      description: "Gerrit project branch"
+    GERRIT_REFSPEC:
+      type: "string"
+      value: "refs/heads/master"
+      description: "Gerrit change refspec"
+    UPLIFT_DEPENDENCY:
+      type: "bool"
+      value: false
+      description: "Uplift chart dependency before the testing"
+    UPLIFT_CHART_NAME:
+      type: "string"
+      value: ""
+      description: "Uplift chart name"
+    UPLIFT_CHART_VERSION:
+      type: "string"
+      value: ""
+      description: "Uplift chart version"
+    UPLIFT_CHART_FILE:
+      type: "string"
+      value: ""
+      description: "Uplift chart file"
+# Get Chart Version Job
+getChartVersion:
+  name: "get-chart-version"
+  description: "Pipeline for Get Chart Version"
+  file: "jenkins/tools/get-chart-version/Jenkinsfile"
+  maxLogDays: "21"
+  maxLogBuilds: "40"
+  parallelRun: true
+  enable: true
+  parameters:
+    CHART_NAME:
+      type: "string"
+      value: "eo-helmfile"
+      description: "Enter the Chart Name"
+    VERSION_TYPE:
+      type: "choice"
+      description: "Set the Chart Version Type"

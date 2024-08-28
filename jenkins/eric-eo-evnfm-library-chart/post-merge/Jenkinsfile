@@ -1,0 +1,129 @@
+#!/usr/bin/env groovy
+
+@Library('jenkins-shared-libs')
+import static com.ericsson.orchestration.mgmt.libs.VnfmJenkins.getAgentLabel
+import static com.ericsson.orchestration.mgmt.libs.VnfmJenkins.getSeedJobName
+import static com.ericsson.orchestration.mgmt.libs.VnfmGerrit.getLatestTag
+
+
+// Stages template
+def stages = [:]
+// Set Agent label
+String label = getAgentLabel( type: 'concurrent',
+                              this)
+
+
+node(label) {
+    try {
+        // Set Job's ENVs
+        env.SEED_JOB = getSeedJobName(JOB_NAME)
+        env.JOB_TYPE = 'post-merge'
+        env.GLOBAL_VAR_PATH = 'jenkins/global.var'
+        env.VARS_DIR_PATH = 'jenkins/' + env.SEED_JOB + '/'
+        env.VAR_PATH = env.VARS_DIR_PATH + 'project.var'
+        env.GERRIT_BRANCH = 'master'
+
+
+        // Run Prepare Stage
+        stage('Prepare') {
+            println('INFO: Checkout CI code...')
+            checkout(scm)
+
+            println('INFO: Load Global vars...')
+            load(env.GLOBAL_VAR_PATH)
+
+            println('INFO: Load Project vars...')
+            load(env.VAR_PATH)
+
+            println('INFO: Load Stages...')
+            stages['git'] = load(env.GIT_STAGE)
+            stages['envs'] = load(env.ENVS_STAGE)
+            stages['run-job'] = load(env.RUN_JOB_STAGE)
+            stages['post'] = load(env.POST_STAGE)
+            stages['clean'] = load(env.CLEAN_STAGE)
+
+            env.PROJECT_TAG = getLatestTag( project: env.GERRIT_PROJECT,
+                                            url: env.GERRIT_URL,
+                                            this)
+            println('INFO: Latest tag is ' + env.PROJECT_TAG)
+        }
+
+        // Run Checkout Project Stage
+        stages['git'].CheckoutProject(project: env.GERRIT_PROJECT,
+                                      branch: env.GERRIT_BRANCH,
+                                      type: 'tag',
+                                      tag: env.PROJECT_TAG)
+
+        // Run Update Job ENVs Stage
+        stages['envs'].Update(project: env.GERRIT_PROJECT)
+
+        def varList = [ 'UMBRELLA_CHARTS_VAR',
+                        'EVNFM_CHARTS_VAR',
+                        'OFOC_CHARTS_VAR']
+        for(String var in varList) {
+            String umbrellaName = var.minus('_CHARTS_VAR')
+
+            stage('Uplift version in ' + umbrellaName + ' charts') {
+                def stageList = [:]
+
+                for(Map upliftChart in readYaml(file: env.VARS_DIR_PATH + env[var])) {
+                    Map chart = upliftChart
+
+                    stageList[chart['name']] = {
+                        // Run DR Check Job
+                        String drStage = 'Run DR check for ' + chart['name']
+                        ArrayList drCheckParams = []
+                        drCheckParams.add(name: 'GERRIT_PROJECT',
+                                          value: chart['project'])
+                        drCheckParams.add(name: 'GERRIT_BRANCH',
+                                          value: chart['branch'])
+                        drCheckParams.add(name: 'UPLIFT_DEPENDENCY',
+                                          value: true)
+                        drCheckParams.add(name: 'UPLIFT_CHART_NAME',
+                                          value: env.CHART_NAME)
+                        drCheckParams.add(name: 'UPLIFT_CHART_VERSION',
+                                          value: env.CHART_VERSION)
+                        drCheckParams.add(name: 'UPLIFT_CHART_FILE',
+                                          value: chart['file'])
+                        stages['run-job'].LocalJob( name: env.DR_CHECK_JOB,
+                                                    params: drCheckParams,
+                                                    artifact: chart['name'] + '-design-rule-report.html',
+                                                    stage: drStage,
+                                                    isFail: false)
+
+                        // Run Uplift Child Chart Job
+                        ArrayList upliftJobParams = []
+                        upliftJobParams.add(name: 'CHART_NAME',
+                                            value: env.CHART_NAME)
+                        upliftJobParams.add(name: 'CHART_VERSION',
+                                            value: env.CHART_VERSION)
+                        upliftJobParams.add(name: 'UMBRELLA_PROJECT_NAME',
+                                            value: chart['project'])
+                        upliftJobParams.add(name: 'UMBRELLA_PROJECT_BRANCH',
+                                            value: chart['branch'])
+                        upliftJobParams.add(name: 'UMBRELLA_CHART_FILE',
+                                            value: chart['file'])
+                        Boolean skipUplift = env[drStage] != 'success'
+                        stages['run-job'].LocalJob( name: env.UPLIFT_CHILD_CHART_JOB,
+                                                    params: upliftJobParams,
+                                                    stage: 'Uplift version in ' + chart['project'],
+                                                    skip: skipUplift)
+                    }
+                }
+
+                parallel stageList
+            }
+        }
+
+    } catch (Exception errJob) {
+        println(errJob)
+        currentBuild.result = 'FAILURE'
+    } finally {
+        // Run Post Actions Stage
+        stages['post'].PostMerge( project: env.GERRIT_PROJECT,
+                                  status: currentBuild.result ?: 'SUCCESS')
+
+        // Run Clean Stage
+        stages['clean'].CleanBuild()
+    }
+}

@@ -1,0 +1,38 @@
+---
+- name: get pip3
+  get_url:
+    url: https://bootstrap.pypa.io/get-pip.py
+    dest: /tmp/get-pip3.py
+- name: install pip3
+  command: python3 get-pip3.py
+  become: true
+  become_user: root
+  args:
+    chdir: /tmp
+
+- name: get pip2
+  get_url:
+    url: https://bootstrap.pypa.io/pip/2.7/get-pip.py
+    dest: /tmp/get-pip2.py
+- name: install pip2
+  command: python2 get-pip2.py
+  become: true
+  become_user: root
+  args:
+    chdir: /tmp
+
+
+- name: get vnf sdk pkg tools package
+  unarchive:
+    src: "https://arm1s11-eiffel052.eiffel.gic.ericsson.se:8443/nexus/service/local/repositories/eo-releases/content/com/ericsson/orchestration/mgmt/packaging/vnfsdk-pkgtools/{{ vnf_sdk_pkg_tools_version }}/vnfsdk-pkgtools-{{ vnf_sdk_pkg_tools_version }}.tar.gz"
+    dest: /tmp
+    remote_src: yes
+- name: install vnf sdk pkg tools
+  shell: "echo /tmp/vnfsdk-pkgtools-{{vnf_sdk_pkg_tools_version}}/vnfsdk-{{vnf_sdk_pkg_tools_version }}-py2-none-any.whl is not pip installed yet, TODO after nodes are up and running for all other jobs'"
+- name: setuppython install python modules
+  pip:
+    name: ['pytest', 'robotframework', 'requests==2.25.1', 'wagon==0.6.3', 'wheel==0.29.0', 'semver', 'ruamel.yaml==0.11.15', 'Pyyaml']
+    umask: "0022"
+    state: forcereinstall
+  become_user: amadm100
+  become: true

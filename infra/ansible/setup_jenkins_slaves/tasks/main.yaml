@@ -1,0 +1,147 @@
+---
+- name: copy keys
+  copy:
+    src: keys/
+    dest: "/home/{{ user_to_add}}/.ssh/"
+    owner: "{{ user_to_add}}"
+    group: "{{ user_to_add}}"
+    mode: 0600
+  become: true
+  become_user: root
+- name: copy maven settings
+  copy:
+    src: maven/
+    dest: "/home/{{ user_to_add}}/.m2/"
+    owner: "{{ user_to_add}}"
+    group: "{{ user_to_add}}"
+    mode: 0644
+  become: true
+  become_user: root
+- name: copy kubeconfig files
+  copy:
+    src: kubeconfig/
+    dest: "/home/{{ user_to_add}}/.kube/"
+    owner: "{{ user_to_add}}"
+    group: "{{ user_to_add}}"
+    mode: 0644
+  become: true
+  become_user: root
+  # this task often fails the first time it's executed with host unreachable when only 1 or two hosts are used
+  # can re-trigger the playbook but can use the following param to start from this task which normally passes '--start-at-task="copy kubeconfig files"'
+- name: install kubectl
+  get_url:
+    url: "https://storage.googleapis.com/kubernetes-release/release/v{{ kubectl_version }}/bin/linux/amd64/kubectl"
+    dest: /usr/local/bin/kubectl
+  become: true
+  become_user: root
+- name: change permissions on kubectl
+  file:
+    path: /usr/local/bin/kubectl
+    mode: 655
+  become: true
+  become_user: root
+- name: download mvn
+  unarchive:
+    src: "https://archive.apache.org/dist/maven/maven-3/{{ maven_version}}/binaries/apache-maven-{{ maven_version}}-bin.tar.gz"
+    dest: /usr/local/src
+    remote_src: yes
+  become: true
+  become_user: root
+- name: create maven directory
+  file:
+    path: /usr/local/src/apache-maven
+    state: directory
+  become: true
+  become_user: root
+- name: move maven
+  copy:
+    remote_src: True
+    src: /usr/local/src/apache-maven-3.6.3/
+    dest: /usr/local/src/apache-maven/
+  become: true
+  become_user: root
+- name: link new version of maven
+  file:
+    src: /usr/local/src/apache-maven/bin/mvn
+    dest: /usr/bin/mvn
+    state: link
+  become: true
+  become_user: root
+- name: configure maven
+  copy:
+    src: maven/maven.sh
+    dest: /etc/profile.d/
+    owner: "{{ user_to_add}}"
+    group: "{{ user_to_add}}"
+    mode: 0755
+  become: true
+  become_user: root
+- name: setupjenkins install python modules
+  pip:
+    name: ['pyyaml', 'semver==2.10.2']
+    umask: "0022"
+- name: update bash
+  script: bash/install.sh
+  become: true
+  become_user: root
+- name: install ruby
+  script: ruby/install_ruby.sh
+  become: true
+  become_user: root
+- name: add user to docker group
+  user:
+    name: "{{ user_to_add }}"
+    append: yes
+    group: docker
+  become: true
+  become_user: root
+- name: start docker daemon
+  service:
+    name: docker
+    state: started
+  become: true
+  become_user: root
+- name: copy EGAD certs to slave
+  copy:
+    src: certs/
+    dest: /tmp/
+- name: add python3 modules
+  shell: "python3 -m pip install requests pyyaml"
+  become: true
+  become_user: root
+- name: download docker tars
+  get_url:
+    url: https://arm1s11-eiffel052.eiffel.gic.ericsson.se:8443/nexus/service/local/repositories/evnfm_storage/content/ftp/docker/jenkins-docker/3/jenkins-docker-3.tar
+    dest: ./
+- name: load docker tar
+  shell: docker load --input jenkins-docker-3.tar
+  become: true
+  become_user: root
+- name: delete onboarding csars folder
+  shell: "rm -rf /home/amadm100/onboarding-gerrit-testing-csars"
+  become: true
+  ignore_errors: yes
+- name: create onboarding csars folder
+  shell: "mkdir /home/amadm100/onboarding-gerrit-testing-csars"
+  become: true
+- name: delete release-testing csars folder
+  shell: "rm -rf /home/amadm100/release-testing-csars"
+  become: true
+  ignore_errors: yes
+- name: create release-testing csars folder
+  shell: "mkdir /home/amadm100/release-testing-csars"
+  become: true
+- name: change home folder owner
+  shell: sudo chown -R amadm100:amadm100 /home/amadm100
+  become: true
+  become_user: root
+- name: download onboarding csars
+  shell: "wget -O /home/amadm100/onboarding-gerrit-testing-csars/{{ item.key }} {{ item.value }}"
+  loop: "{{ onboarding_csars | dict2items }}"
+  become_user: amadm100
+  become: true
+- name: download release-testing csars
+  shell: "wget -O /home/amadm100/release-testing-csars/{{ item.key }} {{ item.value }}"
+  loop: "{{ release_csars | dict2items }}"
+  become_user: amadm100
+  become: true

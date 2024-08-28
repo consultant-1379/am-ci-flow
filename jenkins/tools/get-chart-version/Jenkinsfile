@@ -1,0 +1,50 @@
+#!/usr/bin/env groovy
+
+@Library('jenkins-shared-libs')
+import static Boolean.parseBoolean
+import static com.ericsson.orchestration.mgmt.libs.VnfmJenkins.getAgentLabel
+import static com.ericsson.orchestration.mgmt.libs.VnfmJenkins.getSeedJobName
+
+
+// Stages template
+def stages = [:]
+// Set Agent label
+String label = getAgentLabel( type: 'concurrent',
+                              this)
+
+
+node(label) {
+    try {
+        // Set Job's ENVs
+        env.SEED_JOB = getSeedJobName(JOB_NAME)
+        env.SHORT_JOB_NAME = JOB_NAME.minus(env.SEED_JOB + '_')
+        env.GLOBAL_VAR_PATH = 'jenkins/global.var'
+        env.JOB_TYPE = 'get-chart-version'
+        env.CHART_NAME = params.CHART_NAME
+        env.VERSION_TYPE = params.VERSION_TYPE
+
+
+        // Run Prepare Stage
+        stage('Prepare') {
+            println('INFO: Checkout CI code...')
+            checkout(scm)
+
+            println('INFO: Load Global vars...')
+            load(env.GLOBAL_VAR_PATH)
+
+            println('INFO: Load Stages...')
+            stages['envs'] = load(env.ENVS_STAGE)
+            stages['post'] = load(env.POST_STAGE)
+        }
+
+        // Run Update ENVs Stage
+        stages['envs'].RunUpdateEVNFM(env.CHART_NAME)
+
+    } catch (Exception errJob) {
+        println(errJob)
+        currentBuild.result = 'FAILURE'
+    } finally {
+        // Run Post Actions Stage
+        stages['post'].ServiceJob(name: env.SHORT_JOB_NAME)
+    }
+}

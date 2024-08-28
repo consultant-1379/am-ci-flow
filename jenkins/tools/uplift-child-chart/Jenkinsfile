@@ -1,0 +1,69 @@
+#!/usr/bin/env groovy
+
+@Library('jenkins-shared-libs')
+import static com.ericsson.orchestration.mgmt.libs.VnfmJenkins.getAgentLabel
+
+
+// Stages template
+def stages = [:]
+// Set Agent label
+String label = getAgentLabel( type: 'gerrit',
+                              this)
+
+
+node(label) {
+    try {
+        // Set Job's ENVs
+        env.GLOBAL_VAR_PATH = 'jenkins/global.var'
+        env.CHART_NAME = params.CHART_NAME
+        env.CHART_VERSION = params.CHART_VERSION
+        env.UMBRELLA_PROJECT_NAME = params.UMBRELLA_PROJECT_NAME
+        env.UMBRELLA_PROJECT_BRANCH = params.UMBRELLA_PROJECT_BRANCH
+        env.UMBRELLA_CHART_FILE = params.UMBRELLA_CHART_FILE
+
+
+        // Run Prepare Stage
+        stage('Prepare') {
+            println('INFO: Checkout CI code...')
+            checkout(scm)
+
+            println('INFO: Load Global vars...')
+            load(env.GLOBAL_VAR_PATH)
+
+            println('INFO: Load Stages...')
+            stages['git'] = load(env.GIT_STAGE)
+            stages['helm'] = load(env.HELM_STAGE)
+            stages['clean'] = load(env.CLEAN_STAGE)
+        }
+
+
+        // Run Checkout Project Stage
+        stages['git'].CheckoutProject(project: env.UMBRELLA_PROJECT_NAME,
+                                      branch: env.UMBRELLA_PROJECT_BRANCH,
+                                      type: 'push')
+
+        // Run Uplift Dependency Stage
+        stages['helm'].UpliftDependency(name: env.CHART_NAME,
+                                        version: env.CHART_VERSION,
+                                        project: env.UMBRELLA_PROJECT_NAME,
+                                        file: env.UMBRELLA_CHART_FILE)
+
+        // Run Create Change Stage
+        String message = env.CHANGE_MESSAGE
+                                          .replace('_PROJECT_NAME_', env.CHART_NAME)
+                                          .replace('_version_', env.CHART_VERSION)
+        stages['git'].CreateChange( project: env.UMBRELLA_PROJECT_NAME,
+                                    files: env.UMBRELLA_CHART_FILE,
+                                    message: message,
+                                    topic: env.CHART_NAME,
+                                    submit: true,
+                                    version: env.CHART_VERSION)
+
+    } catch (Exception errJob) {
+        println(errJob)
+        currentBuild.result = 'FAILURE'
+    } finally {
+        // Run Clean Stage
+        stages['clean'].CleanBuild()
+    }
+}

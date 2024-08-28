@@ -1,0 +1,114 @@
+# OFOC Testing pipeline
+- name: "OSS_FUNCTION_ORCHESTRATION_COMMON_Functional_Testing"
+  project: "oss-function-orchestration-common-e2e-cicd"
+  template: "functional_testing"
+  configs:
+    keepWaitingPipelines: true
+    limitConcurrent: false
+# OFOC Parent Staging pipeline
+- name: "OFOC_Parent_Staging"
+  project: "oss-function-orchestration-common-e2e-cicd"
+  template: "parent_staging"
+  configs:
+    keepWaitingPipelines: true
+    limitConcurrent: false
+    maxConcurrentExecutions: 3
+    notifications:
+      - type: "email"
+        address: "pdlecmciec@pdl.internal.ericsson.com"
+        level: "pipeline"
+        when:
+          - "pipeline.failed"
+# OFOC Baseline Staging pipeline
+- name: "OFOC_Baseline_Staging"
+  project: "oss-function-orchestration-common-e2e-cicd"
+  template: "baseline_staging"
+  configs:
+    keepWaitingPipelines: true
+    limitConcurrent": false
+# ERIC-OSS-EO-LM-CONSUMER E2E Flow pipeline
+- name: "eric-oss-eo-lm-consumer-E2E-Flow"
+  project: "oss-function-orchestration-common-e2e-cicd"
+  template: "eo_pipeline_ofoc"
+  configs:
+    limitConcurrent: false
+    triggers:
+      - type: "webhook"
+        source: "eric-oss-eo-lm-consumer"
+        enabled: true
+# ERIC-EO-BATCH-MANAGER E2E Flow pipeline
+- name: "eric-eo-batch-manager-E2E-Flow"
+  project: "oss-function-orchestration-common-e2e-cicd"
+  template: "eo_pipeline_ofoc"
+  configs:
+    limitConcurrent: false
+    triggers:
+      - type: "webhook"
+        source: "eric-eo-batch-manager"
+        enabled: true
+# ERIC-EO-FH-EVENT-TO-ALARM-ADAPTER E2E Flow pipeline
+- name: "eric-eo-fh-event-to-alarm-adapter-E2E-Flow"
+  project: "oss-function-orchestration-common-e2e-cicd"
+  template: "eo_pipeline_ofoc"
+  configs:
+    limitConcurrent: false
+    triggers:
+      - type: "webhook"
+        source: "event-to-alarm-adapter"
+        enabled: true
+# ERIC-OSS-AM-ONBOARDING-SERVICE E2E Flow pipeline
+- name: "eric-oss-am-onboarding-service-E2E-Flow"
+  project: "oss-function-orchestration-common-e2e-cicd"
+  template: "eo_pipeline_ofoc"
+  configs:
+    limitConcurrent: false
+    triggers:
+      - type: "webhook"
+        source: "am-onboarding-service"
+        enabled: true
+# ERIC-EVNFM-CRYPTO E2E Flow pipeline
+- name: "eric-evnfm-crypto-E2E-Flow"
+  project: "oss-function-orchestration-common-e2e-cicd"
+  template: "eo_pipeline_ofoc"
+  configs:
+    limitConcurrent: false
+    triggers:
+      - type: "webhook"
+        source: "eric-evnfm-crypto"
+        enabled: true
+# ERIC-EVNFM-NBI-SERVICE E2E Flow pipeline
+- name: "eric-evnfm-nbi-service-E2E-Flow"
+  project: "oss-function-orchestration-common-e2e-cicd"
+  template: "eo_pipeline_ofoc"
+  configs:
+    limitConcurrent: false
+    triggers:
+      - type: "webhook"
+        source: "evnfm-nbi-service"
+        enabled: true
+# OFOC Release E2E Flow pipeline
+- name: "OFOC-release-E2E-Flow"
+  project: "oss-function-orchestration-common-e2e-cicd"
+  template: "staging_ofoc_release"
+  configs:
+    limitConcurrent: false
+    notifications:
+      - type: "email"
+        address: "PDLAPPSTAG@pdl.internal.ericsson.com"
+        level: "pipeline"
+        when:
+          - "pipeline.failed"
+    triggers:
+      - type: "webhook"
+        source: "ofoc-release"
+        enabled: true
+# ERIC-GR-BUR-ORCHESTRATOR E2E Flow pipeline
+- name: "eric-gr-bur-orchestrator"
+  project: "oss-function-orchestration-common-e2e-cicd"
+  template: "eo_pipeline_ofoc"
+  configs:
+    limitConcurrent: false
+    triggers:
+      - type: "webhook"
+        source: "eric-gr-bur-orchestrator"
+        enabled: true

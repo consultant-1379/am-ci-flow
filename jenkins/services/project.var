@@ -1,0 +1,87 @@
+/*******************************************************************************
+ * COPYRIGHT Ericsson 2024
+ *
+ *
+ *
+ * The copyright to the computer program(s) herein is the property of
+ *
+ * Ericsson Inc. The programs may be used and/or copied only with written
+ *
+ * permission from Ericsson Inc. or in accordance with the terms and
+ *
+ * conditions stipulated in the agreement/contract under which the
+ *
+ * program(s) have been supplied.
+ ******************************************************************************/
+// Docker ENVs
+env.DOCKER_JENKINS_PATH = 'docker/jenkins/images.yaml'
+
+
+// Build ENVs
+env.CLUSTER_LIST = ['haber002',
+                    'hart066',
+                    'hart070',
+                    'geo35660']
+env.WHITE_NAMESPACE_LIST = ['cattle-impersonation-system',
+                            'cattle-fleet-system',
+                            'cattle-prometheus',
+                            'cattle-system',
+                            'default',
+                            'kube-node-lease',
+                            'kube-public',
+                            'kube-system',
+                            'fleet-system',
+                            'iccr-crd',
+                            'ingress-nginx',
+                            'ingress-iccr',
+                            'ingress-iccr-crd',
+                            'kubernetes-dashboard',
+                            'evnfm-metrics',
+                            'eric-crd-ns',
+                            'gr-iccr',
+                            'local',
+                            'local-k8s-registry',
+                            'vnfm-deploy1',
+                            'vnfm-deploy2',
+                            'vnfm-deploy3',
+                            'vnfm-deploy4',
+                            'vnfm-deploy5',
+                            'vnfm-deploy6',
+                            'sftp-server',
+                            'nfs-server',
+                            'chaos-mesh',
+                            'jenkins',
+                            'etcd',
+                            'gr2',
+                            'monitoring',
+                            'victoria-metrics-patcher']
+env.WHITE_NAMESPACE_LABEL = [ 'source=jenkins',
+                              'source=tests']
+env.SKIP_NAMESPACE_LABEL = 'doNotCleanup=true'
+env.AGENT_LIST = ['process_engine_01',
+                  'process_engine_02',
+                  'process_engine_03',
+                  'process_engine_04',
+                  'process_engine_05',
+                  'process_engine_06',
+                  'process_engine_07',
+                  'process_engine_08',
+                  'process_engine_09',
+                  'process_engine_10',
+                  'process_engine_11',
+                  'process_engine_12',
+                  'process_engine_13',
+                  'process_engine_14',
+                  'process_engine_15',
+                  'process_engine_16',
+                  'process_engine_17',
+                  'process_engine_18',
+                  'process_engine_19',
+                  'process_engine_20']
+
+
+// VARs file path
+env.SEED_JOBS_VAR = 'vars/seed-jobs.yaml'
+env.KUBERNETES_CLUSTERS_VAR = 'kubernetes-clusters.yaml'
+env.AGENT_LABELS_VAR = 'agent-labels.yaml'
+env.JENKINS_GLOBAL_VARIABLES_VAR = 'jenkins-global-variables.yaml'

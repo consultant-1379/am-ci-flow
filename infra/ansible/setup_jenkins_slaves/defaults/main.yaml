@@ -1,0 +1,28 @@
+---
+kubectl_version: 1.16.2
+maven_version: 3.6.3
+onboarding_csars:
+  acceptance-sample-different-chart.csar: https://arm1s11-eiffel052.eiffel.gic.ericsson.se:8443/nexus/service/local/repositories/csar_storage/content/ftp/acceptance-sample-different-chart/1.0.0/acceptance-sample-different-chart-1.0.0.csar
+  acceptance-sample-same-chart.csar: https://arm1s11-eiffel052.eiffel.gic.ericsson.se:8443/nexus/service/local/repositories/csar_storage/content/ftp/acceptance-sample-same-chart/1.0.0/acceptance-sample-same-chart-1.0.0.csar
+  mongo-nginx.csar: https://arm1s11-eiffel052.eiffel.gic.ericsson.se:8443/nexus/service/local/repositories/csar_storage/content/ftp/onboarding/unknown/mongo-nginx/1/mongo-nginx-1.csar
+  multiple-helm-csar.csar: https://arm1s11-eiffel052.eiffel.gic.ericsson.se:8443/nexus/service/local/repositories/csar_storage/content/ftp/onboarding/unknown/multiple-helm-csar/1/multiple-helm-csar-1.csar
+  nginx-redis-two.csar: https://arm1s11-eiffel052.eiffel.gic.ericsson.se:8443/nexus/service/local/repositories/csar_storage/content/ftp/onboarding/unknown/nginx-redis-two/1/nginx-redis-two-1.csar
+  nginx-redis.csar: https://arm1s11-eiffel052.eiffel.gic.ericsson.se:8443/nexus/service/local/repositories/csar_storage/content/ftp/onboarding/unknown/nginx-redis/1/nginx-redis-1.csar
+  sample-cnf-flavor-1.csar: https://arm1s11-eiffel052.eiffel.gic.ericsson.se:8443/nexus/service/local/repositories/csar_storage/content/ftp/onboarding/unknown/sample-cnf-flavor-1/1/sample-cnf-flavor-1-1.csar
+  sample-cnf-multi-without-image.csar: https://arm1s11-eiffel052.eiffel.gic.ericsson.se:8443/nexus/service/local/repositories/csar_storage/content/ftp/sample-cnf-multi-without-image/1.0.0/sample-cnf-multi-without-image-1.0.0.csar
+  sample-descriptor-etsi-onboard.csar: https://arm1s11-eiffel052.eiffel.gic.ericsson.se:8443/nexus/service/local/repositories/csar_storage/content/ftp/onboarding/unknown/sample-descriptor-etsi-onboard/1/sample-descriptor-etsi-onboard-1.csar
+  sample-signed-etsi-onboard.csar: https://arm1s11-eiffel052.eiffel.gic.ericsson.se:8443/nexus/service/local/repositories/csar_storage/content/ftp/onboarding/unknown/sample-signed-etsi-onboard/1/sample-signed-etsi-onboard-1.csar
+  sampledescriptor.csar: https://arm1s11-eiffel052.eiffel.gic.ericsson.se:8443/nexus/service/local/repositories/csar_storage/content/ftp/sampledescriptor/1.0.0/sampledescriptor-1.0.0.csar
+  spider-app-c-1.0.7-imageless.csar: https://arm1s11-eiffel052.eiffel.gic.ericsson.se:8443/nexus/service/local/repositories/csar_storage/content/ftp/spider-app-c/1.0.7/spider-app-c-1.0.7-imageless.csar
+  spider-app-levels-no-mapping-1.1.4-imageless.csar: https://arm1s11-eiffel052.eiffel.gic.ericsson.se:8443/nexus/service/local/repositories/evnfm_testing_artifacts/content/onboarding/helm2/single/spider-app-levels-no-mapping/1.1.4/spider-app-levels-no-mapping-1.1.4-imageless.csar
+  spider-app-levels-with-mapping-1.1.3-imageless.csar: https://arm1s11-eiffel052.eiffel.gic.ericsson.se:8443/nexus/service/local/repositories/evnfm_testing_artifacts/content/onboarding/helm2/single/spider-app-levels-with-mapping/1.1.3/spider-app-levels-with-mapping-1.1.3-imageless.csar
+  spider-app-lightweight-same-chart-1.1.4-imageless.csar: https://arm1s11-eiffel052.eiffel.gic.ericsson.se:8443/nexus/service/local/repositories/evnfm_testing_artifacts/content/helm2/single/spider-app-lightweight-same-chart/1.1.4/spider-app-lightweight-same-chart-1.1.4-imageless.csar
+  spider-app-lightweight-same-chart-2.1.5-imageless.csar: https://arm1s11-eiffel052.eiffel.gic.ericsson.se:8443/nexus/service/local/repositories/evnfm_testing_artifacts/content/helm2/single/spider-app-lightweight-same-chart/2.1.5/spider-app-lightweight-same-chart-2.1.5-imageless.csar
+  spider-app-multi-a-1.0.11-v2-imageless.csar: https://arm1s11-eiffel052.eiffel.gic.ericsson.se:8443/nexus/service/local/repositories/csar_storage/content/ftp/onboarding/unknown/spider-app-multi-a-1.0.11-v2-imageless/1/spider-app-multi-a-1.0.11-v2-imageless-1-imageless.csar
+release_csars:
+  spider-app-b-1.0.16-imageless.csar: https://arm1s11-eiffel052.eiffel.gic.ericsson.se:8443/nexus/service/local/repositories/evnfm_testing_artifacts/content/helm2/single/spider-app-b/1.0.16/spider-app-b-1.0.16-imageless.csar
+  spider-app-c-1.0.17-imageless.csar: https://arm1s11-eiffel052.eiffel.gic.ericsson.se:8443/nexus/service/local/repositories/evnfm_testing_artifacts/content/helm2/single/spider-app-c/1.0.17/spider-app-c-1.0.17-imageless.csar
+  spider-app-multi-a-1.0.22-v2.csar: https://arm1s11-eiffel052.eiffel.gic.ericsson.se:8443/nexus/service/local/repositories/evnfm_testing_artifacts/content/helm3/multi/spider-app-multi-a/1.0.22/spider-app-multi-a-1.0.22-v2.csar
+  spider-app-multi-a-1.0.22-v2-imageless.csar: https://arm1s11-eiffel052.eiffel.gic.ericsson.se:8443/nexus/service/local/repositories/evnfm_testing_artifacts/content/helm3/multi/spider-app-multi-a/1.0.22/spider-app-multi-a-1.0.22-v2-imageless.csar
+  spider-app-multi-b-1.0.22-v2.csar: https://arm1s11-eiffel052.eiffel.gic.ericsson.se:8443/nexus/service/local/repositories/evnfm_testing_artifacts/content/helm3/multi/spider-app-multi-b/1.0.22/spider-app-multi-b-1.0.22-v2.csar
+  spider-app-multi-b-1.0.22-v2-imageless.csar: https://arm1s11-eiffel052.eiffel.gic.ericsson.se:8443/nexus/service/local/repositories/evnfm_testing_artifacts/content/helm3/multi/spider-app-multi-b/1.0.22/spider-app-multi-b-1.0.22-v2-imageless.csar

@@ -1,0 +1,9 @@
+- name: "Configure Kubernetes nodes"
+  hosts: k8s_nodes
+  gather_facts: false
+  become: yes
+  serial: 1
+  order: sorted
+
+  roles:
+    - k8s-pod-capacity

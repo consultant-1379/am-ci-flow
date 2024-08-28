@@ -1,0 +1,54 @@
+#!/usr/bin/env groovy
+
+@Library('jenkins-shared-libs')
+import static com.ericsson.orchestration.mgmt.libs.VnfmJenkins.getSeedJobName
+
+
+// Stages template
+def stages = [:]
+
+
+node('master') {
+    try {
+        // Set Job's ENVs
+        env.SEED_JOB = getSeedJobName(JOB_NAME)
+        env.GLOBAL_VAR_PATH = 'jenkins/global.var'
+        env.VAR_PATH = 'jenkins/' + env.SEED_JOB + '/project.var'
+
+
+        // Run Prepare Stage
+        stage('Prepare') {
+            println('INFO: Checkout CI code...')
+            checkout(scm)
+
+            println('INFO: Load Global vars...')
+            load(env.GLOBAL_VAR_PATH)
+
+            println('INFO: Load Project vars...')
+            load(env.VAR_PATH)
+
+            println('INFO: Load Stages...')
+            stages['clean'] = load(env.CLEAN_STAGE)
+        }
+
+
+        def stepList = [:]
+        for(String agent in readYaml(text: env.AGENT_LIST)) {
+            String name = agent
+            stepList[name] = {
+                timeout(time: 30, unit: 'MINUTES') {
+                    stages['clean'].CleanAgent( name: name,
+                                                skip: !params[name])
+                }
+            }
+        }
+
+        parallel stepList
+
+    } catch (Exception errJob) {
+        println(errJob)
+        currentBuild.result = 'FAILURE'
+    } finally {
+        cleanWs()
+    }
+}

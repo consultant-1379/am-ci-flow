@@ -1,0 +1,56 @@
+#!/usr/bin/env groovy
+
+@Library('jenkins-shared-libs')
+import static com.ericsson.orchestration.mgmt.libs.VnfmJenkins.getAgentLabel
+import static com.ericsson.orchestration.mgmt.libs.VnfmNotify.sendMail
+
+
+// Stages template
+def stages = [:]
+// Set Agent label
+String label = getAgentLabel( type: 'gerrit',
+                              this)
+
+
+node(label) {
+    try {
+        // Set Job's ENVs
+        env.GLOBAL_VAR_PATH = 'jenkins/global.var'
+        env.ACTION = params.ACTION
+        env.PROJECT = params.PROJECT
+        env.BRANCH = params.BRANCH
+        env.GROUP_ID = params.GROUP_ID
+
+
+        // Run Prepare Stage
+        stage('Prepare') {
+            println('INFO: Checkout CI code...')
+            checkout(scm)
+
+            println('INFO: Load Global vars...')
+            load(env.GLOBAL_VAR_PATH)
+
+            println('INFO: Load Stages...')
+            stages['git'] = load(env.GIT_STAGE)
+            stages['post'] = load(env.POST_STAGE)
+            stages['clean'] = load(env.CLEAN_STAGE)
+        }
+
+        // Run Lock Branch Stage
+        stages['git'].LockBranch(project: env.PROJECT,
+                                 group: env.GROUP_ID,
+                                 branch: env.BRANCH,
+                                 action: env.ACTION,
+                                 url: env.GERRIT_URL)
+
+    } catch (Exception errJob) {
+        println(errJob)
+        currentBuild.result = 'FAILURE'
+    } finally {
+        // Run Post Actions Stage
+        stages['post'].Base(status: currentBuild.result ?: 'SUCCESS')
+
+        // Run Clean Stage
+        stages['clean'].CleanBuild()
+    }
+}

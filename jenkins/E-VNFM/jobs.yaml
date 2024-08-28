@@ -1,0 +1,403 @@
+#
+# COPYRIGHT Ericsson 2024
+#
+#
+#
+# The copyright to the computer program(s) herein is the property of
+#
+# Ericsson Inc. The programs may be used and/or copied only with written
+#
+# permission from Ericsson Inc. or in accordance with the terms and
+#
+# conditions stipulated in the agreement/contract under which the
+#
+# program(s) have been supplied.
+#
+
+# Pre-Release Job
+preRelease:
+  name: "pre-release"
+  description: "Pipeline for pre-release check"
+  file: "jenkins/E-VNFM/pre-release/Jenkinsfile"
+  maxLogDays: "14"
+  maxLogBuilds: "40"
+  parallelRun: true
+  enable: true
+  parameters:
+    JOB_TYPE:
+      type: "choice"
+    CHART_LIST:
+      type: "string"
+      value: ""
+      description: "Enter comma-separated Chart Name:Version list. E.g.: 'eric-am-common-wfs-ui:0.247.0+1, eric-am-onboarding-service:1.285.0+1'"
+    GERRIT_REFSPEC:
+      type: "string"
+      value: ""
+      description: "Enter gerrit refspec. E.g.: 'refs/changes/*/*/*'"
+    AM_INTEGRATION_REFSPEC:
+      type: "string"
+      value: ""
+      description: "Enter am-integration-chart RefSpec"
+    APP_NAME:
+      type: "string"
+      value: "eric-eo-evnfm"
+      description: "Enter the name of application. E.g.: 'eric-eo-evnfm', 'eric-oss-function-orchestration-common'"
+    ENV_LABEL:
+      type: "string"
+      value: "evnfm-prerelease"
+      description: "Enter environment label"
+    ALLOW_DOWNGRADE:
+      type: "bool"
+      value: false
+      description: "Allow downgrade version of dependency"
+    DEPLOYMENT_MANAGER_DOCKER_IMAGE:
+      type: "string"
+      value: "armdocker.rnd.ericsson.se/proj-eric-oss-drop/eric-oss-deployment-manager:default"
+      description: "Set Deployment manager image"
+    SKIP_UPGRADE_TESTS:
+      type: "bool"
+      value: false
+      description: "Skip upgrade tests"
+    SKIP_TESTNG:
+        type: "bool"
+        value: false
+        description: "Skip TestNG tests"
+    INSTALL_ENM_STUB:
+      type: "bool"
+      value: true
+      description: "Install enm-cli-stub and config it"
+    DRAC_ENABLE:
+      type: "bool"
+      value: true
+      description: "Enable DRAC feature"
+    GR_ENABLE:
+      type: "bool"
+      value: true
+      description: "Enable GR feature"
+    TESTNG_SLAVE_LABEL:
+      type: "choice"
+      description: "Label of the TestNG runner"
+    EVNFM_BRANCH:
+      type: "string"
+      value: ""
+      description: "EVNFM private branch. Use only for Pointfix"
+    EO_BRANCH:
+      type: "string"
+      value: ""
+      description: "EO release branch, E.g: '22.11_track'. Use only for Pointfix"
+    EO_HELMFILE_BASE_VERSION:
+      type: "string"
+      value: ""
+      description: "EO helmfile version. Use only for Pointfix"
+    FULL_PATH_TO_SITE_VALUES_FILE:
+        type: "string"
+        value: "site-values/eo/ci/template/site-values-latest.yaml"
+        description: "Enter full path to site-values template from the oss-integration-ci"
+    TEST_SUITES_FLOW:
+      type: "string"
+      value: "long"
+      description: ""
+    TEST_THREAD_COUNT:
+      type: "string"
+      value: "10"
+      description: ""
+# Helmfile Deploy Job
+helmfileDeploy:
+  name: "Helmfile-Deploy"
+  description: "Pipeline to run Helmfile Deploy"
+  file: "jenkins/E-VNFM/helmfile-deploy/Jenkinsfile"
+  maxLogDays: "14"
+  maxLogBuilds: "20"
+  parallelRun: true
+  enable: true
+  parameters:
+    JOB_TYPE:
+      type: "choice"
+    RESOURCE_NAME:
+      type: "string"
+      value: ""
+      description: "Enter Environment Resource Name"
+    DEPLOYMENT_TYPE:
+      type: "choice"
+      description: "Select Deployment type"
+    CREATE_NAMESPACE:
+      type: "bool"
+      value: true
+      description: "Create Namespace before install"
+    INSTALL_ENM_STUB:
+      type: "bool"
+      value: false
+      description: "Install enm-cli-stub and config it"
+    DRAC_ENABLE:
+      type: "bool"
+      value: false
+      description: "Enable DRAC feature"
+    GR_ENABLE:
+      type: "bool"
+      value: false
+      description: "Enable GR feature"
+    DEPLOY_ALL_CRDS:
+      type: "bool"
+      value: false
+      description: "Deploy all tagged CRDs or not"
+    INT_CHART_NAME:
+      type: "string"
+      value: "eric-eo-helmfile"
+      description: "Enter Integration Chart Name"
+    INT_CHART_REPO:
+      type: "string"
+      value: "https://arm.seli.gic.ericsson.se/artifactory/proj-eo-drop-helm"
+      description: "Enter Integration Chart Repository"
+    INT_CHART_VERSION:
+      type: "string"
+      value: ""
+      description: "Enter Integration Chart Version"
+    TAGS:
+      type: "string"
+      value: "eoEvnfm"
+      description: "List of tags for applications that have to be deployed"
+    HOSTNAME_TYPE:
+      type: "choice"
+      description: "Choice a type of hostnames"
+    GAS_HOSTNAME:
+      type: "string"
+      value: ""
+      description: "Hostname for GAS"
+    HELM_REGISTRY_HOSTNAME:
+      type: "string"
+      value: ""
+      description: "Hostname for EO HELM Registry"
+    VNFM_HOSTNAME:
+      type: "string"
+      value: ""
+      description: "Hostname for EO EVNFM"
+    VNFM_REGISTRY_HOSTNAME:
+      type: "string"
+      value: ""
+      description: "Registry Hostname for EO EVNFM"
+    GLOBAL_VNFM_REGISTRY_HOSTNAME:
+      type: "string"
+      value: ""
+      description: "Global Registry Hostname for EO EVNFM"
+    GR_SECONDARY_HOSTNAME:
+      type: "string"
+      value: ""
+      description: "Secondary GR Hostname for EO GR"
+    FULL_PATH_TO_SITE_VALUES_FILE:
+      type: "string"
+      value: "site-values/eo/ci/template/site-values-latest.yaml"
+      description: "Enter full path to site-values template from the oss-integration-ci"
+    PATH_TO_SITE_VALUES_OVERRIDE_FILE:
+      type: "string"
+      value: "site-values/eo/ci/override/override-site-values-appstaging.yaml"
+      description: "Enter full path to site-values override file from the oss-integration-ci"
+    PATH_TO_CERTIFICATES_FILES:
+      type: "string"
+      value: ""
+      description: "Enter a path to the location of the certificates directory from the eo-integration-ci"
+    USE_DM_PREPARE:
+      type: "bool"
+      value: true
+      description: "Use the Deploymet Manager to generate the site values file"
+    DEPLOYMENT_MANAGER_DOCKER_IMAGE:
+      type: "string"
+      value: "armdocker.rnd.ericsson.se/proj-eric-oss-drop/eric-oss-deployment-manager:default"
+      description: "Set Deployment manager image"
+    OSS_INTEGRATION_CI_REFSPEC:
+      type: "string"
+      value: ""
+      description: 'Gerrit RefSpec of the change to oss-integration-ci repository'
+# Unlock Environment Job
+unlockEnvironment:
+  name: "Unlock-Environment"
+  description: "Pipeline to run for Unlock Environment"
+  file: "jenkins/E-VNFM/unlock-environment/Jenkinsfile"
+  maxLogDays: "14"
+  maxLogBuilds: "20"
+  parallelRun: true
+  enable: true
+  parameters:
+    ENV_NAME:
+      type: "string"
+      value: ""
+      description: "Enter Environment Name"
+# TestNG Job
+testNG:
+  name: "TestNG"
+  description: "Pipeline for run TestNG tests"
+  file: "jenkins/E-VNFM/TestNG/Jenkinsfile"
+  maxLogDays: "21"
+  maxLogBuilds: "60"
+  parallelRun: true
+  enable: true
+  parameters:
+    HOST_VNFM:
+      type: "string"
+      value: ""
+      description: ""
+    HOST_IAM:
+      type: "string"
+      value: ""
+      description: ""
+    HOST_HELM:
+      type: "string"
+      value: ""
+      description: ""
+    IDAM_USERNAME:
+      type: "string"
+      value: ""
+      description: ""
+    IDAM_PASSWORD:
+      type: "string"
+      value: ""
+      description: ""
+    CLUSTER:
+      type: "string"
+      value: "flex"
+      description: ""
+    NAMESPACE:
+      type: "string"
+      value: "release-evnfm"
+      description: ""
+    TEST_FLOW:
+      type: "string"
+      value: "rfm"
+      description: ""
+    TEST_SUITES_FLOW:
+      type: "string"
+      value: "release"
+      description: ""
+    TEST_THREAD_COUNT:
+      type: "string"
+      value: "4"
+      description: ""
+    AM_INTEGRATION_REFSPEC:
+      type: "string"
+      value: "refs/heads/master"
+      description: "am-integration-chart RefSpec"
+    SLAVE_LABEL:
+      type: "choice"
+      description: "Label of the runner"
+# Helmfile Release Job
+helmfileRelease:
+  name: "Helmfile-Release"
+  description: "Pipeline to run Helmfile Release"
+  file: "jenkins/E-VNFM/helmfile-release/Jenkinsfile"
+  maxLogDays: "14"
+  maxLogBuilds: "20"
+  parallelRun: true
+  enable: true
+  parameters:
+    APP_NAME:
+      type: "string"
+      value: "eric-eo-evnfm"
+      description: "Enter the name of application. E.g.: 'eric-eo-evnfm', 'eric-oss-function-orchestration-common'"
+    CHART_NAME:
+      type: "string"
+      value: ""
+      description: "Enter the Chart name"
+    CHART_REPO:
+      type: "string"
+      value: ""
+      description: "Enter the Chart repository"
+    CHART_VERSION:
+      type: "string"
+      value: ""
+      description: "Enter the Chart Version"
+    GERRIT_REFSPEC:
+      type: "string"
+      value: ""
+      description: "Enter the gerrit refspec. E.g.: 'refs/changes/64/14145264/23'"
+    EVNFM_BRANCH:
+      type: "string"
+      value: ""
+      description: "Enter the EVNFM relase branch"
+testCR:
+  name: "CR-Test"
+  description: "Pipeline for container registry check"
+  file: "jenkins/E-VNFM/pre-release/Jenkinsfile"
+  maxLogDays: "14"
+  maxLogBuilds: "40"
+  cron: "TZ=Europe/Kiev\n0 22-23 * * *\n0 00-08 * * *"
+  parallelRun: true
+  enable: true
+  parameters:
+    JOB_TYPE:
+      type: "string"
+      value: 'pre-release'
+    CHART_LIST:
+      type: "string"
+      value: ""
+      description: "Enter comma-separated Chart Name:Version list. E.g.: 'eric-am-common-wfs-ui:0.247.0+1, eric-am-onboarding-service:1.285.0+1'"
+    GERRIT_REFSPEC:
+      type: "string"
+      value: "refs/changes/48/18121948/28"
+      description: "Enter gerrit refspec. E.g.: 'refs/changes/64/14145264/23'"
+    AM_INTEGRATION_REFSPEC:
+      type: "string"
+      value: "refs/changes/48/18121948/28"
+      description: "Enter am-integration-chart RefSpec"
+    APP_NAME:
+      type: "string"
+      value: "eric-eo-evnfm"
+      description: "Enter the name of application. E.g.: 'eric-eo-evnfm', 'eric-oss-function-orchestration-common'"
+    ENV_LABEL:
+      type: "string"
+      value: "evnfm-prerelease"
+      description: "Enter environment label"
+    ALLOW_DOWNGRADE:
+      type: "bool"
+      value: true
+      description: "Allow downgrade version of dependency"
+    DEPLOYMENT_MANAGER_DOCKER_IMAGE:
+      type: "string"
+      value: "armdocker.rnd.ericsson.se/proj-eric-oss-drop/eric-oss-deployment-manager:default"
+      description: "Set Deployment manager image"
+    SKIP_UPGRADE_TESTS:
+      type: "bool"
+      value: true
+      description: "Skip upgrade tests"
+    SKIP_TESTNG:
+      type: "bool"
+      value: false
+      description: "Skip TestNG tests"
+    INSTALL_ENM_STUB:
+      type: "bool"
+      value: true
+      description: "Install enm-cli-stub and config it"
+    DRAC_ENABLE:
+      type: "bool"
+      value: true
+      description: "Enable DRAC feature"
+    TESTNG_SLAVE_LABEL:
+      type: "string"
+      value: 'testng'
+      description: "Label of the TestNG runner"
+    EVNFM_BRANCH:
+      type: "string"
+      value: ""
+      description: "EVNFM private branch. Use only for Pointfix"
+    EO_BRANCH:
+      type: "string"
+      value: ""
+      description: "EO release branch, E.g: '22.11_track'. Use only for Pointfix"
+    EO_HELMFILE_BASE_VERSION:
+      type: "string"
+      value: ""
+      description: "EO helmfile version. Use only for Pointfix"
+    FULL_PATH_TO_SITE_VALUES_FILE:
+      type: "string"
+      value: "site-values/eo/ci/template/site-values-latest.yaml"
+      description: "Enter full path to site-values template from the oss-integration-ci"
+    TEST_SUITES_FLOW:
+      type: "string"
+      value: "long"
+      description: ""
+    TEST_THREAD_COUNT:
+      type: "string"
+      value: "10"
+      description: ""
+    OFOC_SNAPSHOT_VERSION:
+      type: "string"
+      value: "0.17.0-18-h56e880d"
+      description: "Snapshot created for OFOC manually"

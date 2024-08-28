@@ -1,0 +1,54 @@
+# Compiled source
+*.class
+*/bin/*
+*.pyc
+
+# Eclipse files
+.project
+.classpath
+.settings
+.metadata
+
+# IntelliJ IDEA files
+.idea
+*.iws
+*.ipr
+*.iml
+*.patch
+
+# Test output files
+*/test-output/*
+/test-output/
+/test-output
+test-output/
+test-output/**/*
+*/test-output/**/*
+
+# Packages
+*.jar
+
+# Maven build files
+target
+reports
+
+# PMD
+.pmd
+
+# Merge files
+*.orig
+
+# tmp directories and files
+tmp/
+scripts/anchore
+scripts/xray
+scripts/certs/*
+scripts/collect-dependencies/**/*.xml
+scripts/collect-dependencies/**/*.csv
+
+# bob
+var.*
+.bob/
+
+# inventory Ansible file
+inventory_*
+

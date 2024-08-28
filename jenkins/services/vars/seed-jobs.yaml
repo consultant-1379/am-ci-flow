@@ -1,0 +1,46 @@
+#
+# COPYRIGHT Ericsson 2024
+#
+#
+#
+# The copyright to the computer program(s) herein is the property of
+#
+# Ericsson Inc. The programs may be used and/or copied only with written
+#
+# permission from Ericsson Inc. or in accordance with the terms and
+#
+# conditions stipulated in the agreement/contract under which the
+#
+# program(s) have been supplied.
+#
+
+- name: "main"
+- name: "adp"
+- name: "am-ci-flow"
+- name: "am-common-wfs"
+- name: "am-common-wfs-ui"
+- name: "am-onboarding-service"
+- name: "am-package-manager"
+- name: "am-sandbox"
+- name: "am-shared-utilities"
+- name: "batch-manager"
+- name: "drew"
+- name: "E-VNFM"
+- name: "E-VNFM_test"
+- name: "eo-evnfm-nbi-service"
+- name: "eric-eo-evnfm"
+- name: "eric-eo-evnfm-crypto"
+- name: "eric-eo-evnfm-library-chart"
+- name: "eric-eo-lm-consumer"
+- name: "eric-function-orchestration"
+- name: "event-to-fi"
+- name: "evnfm-rbac"
+- name: "gr-controller"
+- name: "jenkins-shared-libs"
+- name: "master"
+- name: "services"
+- name: "signature-validation-lib"
+- name: "tools"
+- name: "vnfm-helm-executor"
+- name: "vnfm-orchestrator"
+- name: "vnfsdk-pkgtools"

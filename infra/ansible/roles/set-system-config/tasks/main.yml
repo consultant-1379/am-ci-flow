@@ -1,0 +1,7 @@
+- name: "Update Net config file"
+  template:
+    src: "net.conf.j2"
+    dest: "/etc/sysctl.d/net.conf"
+    owner: "root"
+    group: "root"
+    mode: "0644"

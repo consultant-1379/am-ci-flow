@@ -1,0 +1,15 @@
+- name: install ca package on rhel systems
+  yum:
+    name: ca-certificates
+    state: present
+
+- name: "Update common certificate"
+  template:
+    src: "ca.crt.j2"
+    dest: "{{ ca_crt_path_RedHat }}common-ca.crt"
+    owner: "root"
+    group: "root"
+    mode: "0644"
+
+- name: update trusted ca redhat
+  shell: /usr/sbin/update-ca-certificates

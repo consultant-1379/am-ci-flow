@@ -1,0 +1,232 @@
+#
+# COPYRIGHT Ericsson 2024
+#
+#
+#
+# The copyright to the computer program(s) herein is the property of
+#
+# Ericsson Inc. The programs may be used and/or copied only with written
+#
+# permission from Ericsson Inc. or in accordance with the terms and
+#
+# conditions stipulated in the agreement/contract under which the
+#
+# program(s) have been supplied.
+#
+
+- name: "hart070"
+  namespace: "jenkins"
+  credential: "JENKINS-HART070"
+  tunnel: ":37445"
+  connectTimeout: 5
+  readTimeout: 20
+  labels:
+    - key: "app"
+      value: "jenkins"
+    - key: "cluster"
+      value: "hart070"
+  pods:
+    - name: "maven"
+      labels: "k8s-maven-hart070 k8s-maven-jdk17"
+      limit: "20"
+      envs:
+        - key: "SLEEP_TIME"
+          value: "5"
+      containers:
+        - name: "jnlp"
+          image: "armdocker.rnd.ericsson.se/proj-am/jenkins/maven-agent-jdk17:1.4.5"
+          alwaysPull: true
+          directory: "/home/jenkins/agent"
+          command: "sh"
+          arguments: '-c  "sleep $SLEEP_TIME && jenkins-agent"'
+          pseudoTTY: false
+          privilege: false
+          requestCPU: "500m"
+          requestMemory: "512Mi"
+          limitCPU: "2000m"
+          limitMemory: "8Gi"
+    - name: "maven-docker"
+      labels: "k8s-maven-docker-hart070 k8s-maven-jdk17-docker"
+      limit: ""
+      inherit: "maven"
+      envs:
+        - key: "DOCKER_HOST"
+          value: "tcp://localhost:2376"
+        - key: "DOCKER_TLS_VERIFY"
+          value: "true"
+        - key: "DOCKER_CERT_PATH"
+          value: "/certs/client"
+        - key: "SLEEP_TIME"
+          value: "30"
+      hostNetwork: true
+      volumes:
+        - type: "emptyDir"
+          mountPath: "/certs/client"
+      containers:
+        - name: "docker"
+          image: "armdocker.rnd.ericsson.se/proj-am/jenkins/docker-agent:1.1.0"
+          alwaysPull: true
+          directory: "/home/jenkins/agent"
+          command: ""
+          arguments: ""
+          pseudoTTY: false
+          privilege: true
+          requestCPU: "1000m"
+          requestMemory: "2Gi"
+          limitCPU: "2000m"
+          limitMemory: "8Gi"
+          initialDelay: 30
+          ports:
+            - name: "docker"
+              containerPort: 2376
+              hostPort: 2376
+    - name: "k8s-testng"
+      labels: "k8s-testng"
+      limit: "20"
+      envs:
+        - key: "SLEEP_TIME"
+          value: "5"
+      containers:
+        - name: "jnlp"
+          image: "armdocker.rnd.ericsson.se/proj-am/jenkins/maven-agent-jdk17:1.4.5"
+          alwaysPull: true
+          directory: "/home/jenkins/agent"
+          command: "sh"
+          arguments: '-c  "sleep $SLEEP_TIME && jenkins-agent"'
+          pseudoTTY: false
+          privilege: false
+          requestCPU: "1000m"
+          requestMemory: "4Gi"
+          limitCPU: "4000m"
+          limitMemory: "16Gi"
+    - name: "ansible"
+      labels: "ansible k8s-ansible"
+      limit: "20"
+      envs:
+        - key: "SLEEP_TIME"
+          value: "5"
+      containers:
+        - name: "jnlp"
+          image: "armdocker.rnd.ericsson.se/proj-am/jenkins/ansible:1.0.2"
+          alwaysPull: true
+          directory: "/home/jenkins/agent"
+          command: "sh"
+          arguments: '-c  "sleep $SLEEP_TIME && jenkins-agent"'
+          pseudoTTY: false
+          privilege: false
+          requestCPU: "500m"
+          requestMemory: "1Gi"
+          limitCPU: "1000m"
+          limitMemory: "3Gi"
+- name: "geo-35660"
+  namespace: "jenkins"
+  credential: "jenkins-geo-35660"
+  tunnel: ":37445"
+  connectTimeout: 5
+  readTimeout: 20
+  labels:
+    - key: "app"
+      value: "jenkins"
+    - key: "cluster"
+      value: "geo-35660"
+  pods:
+    - name: "maven"
+      labels: "k8s-maven-geo-35660 k8s-geo k8s-gerrit gerrit"
+      limit: "20"
+      envs:
+        - key: "SLEEP_TIME"
+          value: "5"
+      containers:
+        - name: "jnlp"
+          image: "armdocker.rnd.ericsson.se/proj-am/jenkins/maven-agent-jdk17:1.4.5"
+          alwaysPull: true
+          directory: "/home/jenkins/agent"
+          command: "sh"
+          arguments: '-c  "sleep $SLEEP_TIME && jenkins-agent"'
+          pseudoTTY: false
+          privilege: false
+          requestCPU: "500m"
+          requestMemory: "512Mi"
+          limitCPU: "2000m"
+          limitMemory: "8Gi"
+    - name: "maven-docker"
+      labels: "k8s-maven-docker-geo-35660 k8s-docker-geo k8s-gerrit-docker gerrit-docker"
+      limit: ""
+      inherit: "maven"
+      envs:
+        - key: "DOCKER_HOST"
+          value: "tcp://localhost:2376"
+        - key: "DOCKER_TLS_VERIFY"
+          value: "true"
+        - key: "DOCKER_CERT_PATH"
+          value: "/certs/client"
+        - key: "SLEEP_TIME"
+          value: "30"
+      hostNetwork: true
+      volumes:
+        - type: "emptyDir"
+          mountPath: "/certs/client"
+      containers:
+        - name: "docker"
+          image: "armdocker.rnd.ericsson.se/proj-am/jenkins/docker-agent:1.1.0"
+          alwaysPull: true
+          directory: "/home/jenkins/agent"
+          command: ""
+          arguments: ""
+          pseudoTTY: false
+          privilege: true
+          requestCPU: "1000m"
+          requestMemory: "2Gi"
+          limitCPU: "2000m"
+          limitMemory: "8Gi"
+          initialDelay: 30
+          ports:
+            - name: "docker"
+              containerPort: 2376
+              hostPort: 2376
+    - name: "corretto"
+      labels: "k8s-corretto"
+      limit: "20"
+      envs:
+        - key: "SLEEP_TIME"
+          value: "5"
+      containers:
+        - name: "jnlp"
+          image: "armdocker.rnd.ericsson.se/proj-am/jenkins/corretto-agent:1.0.1"
+          alwaysPull: true
+          directory: "/home/jenkins/agent"
+          command: "sh"
+          arguments: '-c  "sleep $SLEEP_TIME && jenkins-agent"'
+          pseudoTTY: false
+          privilege: false
+          requestCPU: "500m"
+          requestMemory: "512Mi"
+          limitCPU: "2000m"
+          limitMemory: "8Gi"
+    - name: "corretto-docker"
+      labels: "k8s-corretto-docker"
+      limit: ""
+      inherit: "maven-docker corretto"
+    - name: "maven-jdk11"
+      labels: "k8s-maven-jdk11"
+      limit: "1"
+      envs:
+        - key: "SLEEP_TIME"
+          value: "5"
+      containers:
+        - name: "jnlp"
+          image: "armdocker.rnd.ericsson.se/proj-am/jenkins/maven-agent-jdk11:1.0.0"
+          alwaysPull: true
+          directory: "/home/jenkins/agent"
+          command: "sh"
+          arguments: '-c  "sleep $SLEEP_TIME && jenkins-agent"'
+          pseudoTTY: false
+          privilege: false
+          requestCPU: "500m"
+          requestMemory: "512Mi"
+          limitCPU: "2000m"
+          limitMemory: "8Gi"
+    - name: "maven-jdk11-docker"
+      labels: "k8s-maven-jdk11-docker"
+      limit: ""
+      inherit: "maven-docker maven-jdk11"

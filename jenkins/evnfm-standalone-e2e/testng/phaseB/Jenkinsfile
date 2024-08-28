@@ -1,0 +1,38 @@
+pipeline {
+    agent none
+
+    options {
+        timestamps()
+        timeout(time: 45, unit: 'MINUTES')
+    }
+
+    environment {
+        CLUSTER_FILE = credentials("${CLUSTER_FILE_SECRET_NAME}")
+        GLOBAL_TEST_CONFIG = credentials("${GLOBAL_TEST_CONFIG}")
+        KUBE_CONFIG_PATH = "${CLUSTER_FILE}"
+    }
+
+    stages {
+        stage('Clean install project') {
+            steps {
+                sh 'mvn clean install -DskipTests -ntp'
+            }
+        }
+
+        stage("Run e2e TestNG post-BUR acceptance tests") {
+            steps {
+                sh 'mvn test -P acceptance-testng -Dtestng.suit=phaseB_GR.xml -DglobalTestConfig=${GLOBAL_TEST_CONFIG}'
+            }
+        }
+    }
+
+    post {
+        failure {
+            sh '''
+                chmod +x am-ci-flow/scripts/get_pod_logs.sh
+                ./am-ci-flow/scripts/get_pod_logs.sh ${EVNFM_NAMESPACE} ${CLUSTER_FILE} || echo "Failed to get pods logs"
+            '''
+            archiveArtifacts artifacts: 'logs_eo*.tgz', allowEmptyArchive: true
+        }
+    }
+}

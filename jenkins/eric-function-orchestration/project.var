@@ -1,0 +1,48 @@
+/*******************************************************************************
+ * COPYRIGHT Ericsson 2024
+ *
+ *
+ *
+ * The copyright to the computer program(s) herein is the property of
+ *
+ * Ericsson Inc. The programs may be used and/or copied only with written
+ *
+ * permission from Ericsson Inc. or in accordance with the terms and
+ *
+ * conditions stipulated in the agreement/contract under which the
+ *
+ * program(s) have been supplied.
+ ******************************************************************************/
+// Job's name ENVs
+env.PRE_RELEASE_JOB = 'E-VNFM_pre-release'
+env.RELEASE_JOB = 'eric-function-orchestration_release-flow'
+
+
+// GIT ENVs
+env.GERRIT_PROJECT = 'eric-oss-function-orchestration-common'
+env.GIT_COMMIT_FILES = '''  charts/eric-oss-function-orchestration-common/Chart.yaml \\
+                          | charts/eric-oss-function-orchestration-common/eric-product-info.yaml'''.stripMargin()
+env.DISABLE_SUBMODULES = true
+
+
+// Docker ENVs
+env.DOCKER_DIR = '.'
+env.DOCKER_URL = 'armdocker.rnd.ericsson.se/proj-am'
+
+
+// Build ENVs
+env.ARTIFACTS_DIR = "${WORKSPACE}/Artifacts"
+env.TEST_SCRIPTS = "${WORKSPACE}/${env.OSS_CI_PROJECT}/ci/jenkins/scripts/common/kubernetes_range_checkers/*.sh"
+env.TEMPLATES_PATH = "${WORKSPACE}/templates/precode/*.yaml"
+env.KUBE_VERSION_FILE_PATH = 'charts/eric-oss-function-orchestration-common/kubeVersion.yaml'
+env.SPINNNAKER_HOOK_NAME = 'ofoc-release'
+env.APP_NAME = 'eric-oss-function-orchestration-common'
+env.SKIP_CHECK_STYLE = true
+env.SKIP_VALIDATE_CHART_SCHEMA = false
+env.SKIP_BUILD = true
+
+
+// Helm ENVs
+env.HELM_RELEASE_URL = 'https://arm.seli.gic.ericsson.se/artifactory/proj-eo-evnfm-drop-helm'
+env.CHART_NAME = 'eric-oss-function-orchestration-common'
+env.HELM_URL = env.HELM_RELEASE_URL

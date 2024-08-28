@@ -1,0 +1,33 @@
+/*******************************************************************************
+ * COPYRIGHT Ericsson 2024
+ *
+ *
+ *
+ * The copyright to the computer program(s) herein is the property of
+ *
+ * Ericsson Inc. The programs may be used and/or copied only with written
+ *
+ * permission from Ericsson Inc. or in accordance with the terms and
+ *
+ * conditions stipulated in the agreement/contract under which the
+ *
+ * program(s) have been supplied.
+ ******************************************************************************/
+// GIT ENVs
+env.GERRIT_PROJECT = 'eric-eo-evnfm-library-chart'
+env.GERRIT_BRANCH = 'master'
+env.GIT_COMMIT_FILES = '''pom.xml'''.stripMargin()
+
+
+// Build ENVs
+env.SKIP_CHECK_STYLE = true
+env.SKIP_PRERELEASE = true
+env.SKIP_HELMFILE = true
+env.SKIP_DR_CHECK = true
+env.SKIP_BUILD = true
+
+
+// VARs file path
+env.UMBRELLA_CHARTS_VAR = 'vars/umbrella-charts.yaml'
+env.EVNFM_CHARTS_VAR = 'vars/evnfm-charts.yaml'
+env.OFOC_CHARTS_VAR = 'vars/ofoc-charts.yaml'

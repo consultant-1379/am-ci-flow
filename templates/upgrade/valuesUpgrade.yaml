@@ -1,0 +1,98 @@
+#
+# COPYRIGHT Ericsson 2021
+#
+#
+#
+# The copyright to the computer program(s) herein is the property of
+#
+# Ericsson Inc. The programs may be used and/or copied only with written
+#
+# permission from Ericsson Inc. or in accordance with the terms and
+#
+# conditions stipulated in the agreement/contract under which the
+#
+# program(s) have been supplied.
+#
+
+global:
+  hosts:
+    iam: "iam.latest-env-eric-evnfm.hahn061.rnd.gic.ericsson.se"
+    vnfm: "vnfm.latest-env-eric-evnfm.hahn061.rnd.gic.ericsson.se"
+    gas: "gas.latest-eric-evnfm.hahn061.rnd.gic.ericsson.se"
+  registry:
+    pullSecret: "arm-pullsecret"
+    username: "amadm100"
+    password: "ciTesting123!"
+  iccrAppIngresses: true
+  ingressClass: iccr
+  pullSecret: "docker-registry-secret"
+  logging:
+    enabled: false
+  createClusterRoles: true
+eric-eo-evnfm:
+  eric-am-onboarding-service:
+    registry-tls-secret: "registry-tls-secret"
+  eric-lcm-container-registry:
+    ingress:
+      enabled: true
+      ingressClass: iccr
+      hostname: "docker.latest-eric-evnfm.hahn061.rnd.gic.ericsson.se"
+      tls:
+        secretName: "registry-tls-secret"
+    registry:
+      users:
+        secret: "container-registry-users-secret"
+    persistence:
+      persistentVolumeClaim:
+        size: "10Gi"
+  eric-lcm-helm-chart-registry:
+    updateStrategy:
+      rollingUpdate:
+        maxUnavailable: 1
+    env:
+      secret:
+        BASIC_AUTH_USER: "admin"
+        BASIC_AUTH_PASS: "ciTesting123!"
+    ingress:
+      enabled: true
+      ingressClass: iccr
+      hostname: "helm.latest-env-eric-evnfm.hahn061.rnd.gic.ericsson.se"
+  eric-vnfm-orchestrator-service:
+    smallstack:
+      application: true
+eric-eo-usermgmt:
+  iam:
+    admin:
+      url: "https://iam.latest-env-eric-evnfm.hahn061.rnd.gic.ericsson.se/auth/realms/master"
+eric-sec-access-mgmt:
+  ingress:
+    hostname: "iam.latest-env-eric-evnfm.hahn061.rnd.gic.ericsson.se"
+    ingressClass: iccr
+  egress:
+    ldap:
+      certificates:
+        trustedCertificateListSecret: ""
+  iccrAppIngresses: true
+logging:
+  enabled: true
+tags:
+  eoEvnfm: true
+eric-eo-evnfm-nbi:
+  eric-evnfm-rbac:
+    defaultUser:
+      username: "vnfm"
+      password: "ciTesting123!"
+gas:
+  defaultUser:
+    username: "gasuser"
+    password: "gasTesting123!"
+eric-ctrl-bro:
+  sftp:
+    username: "broAdmin"
+    password: "broPassword123!"
+system-user:
+  credentials:
+    username: "system-user"
+    password: "ciTestingUser123!"
+eric-tm-ingress-controller-cr:
+  enabled: false

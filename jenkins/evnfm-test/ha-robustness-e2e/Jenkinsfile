@@ -1,0 +1,85 @@
+#!/usr/bin/env groovy
+
+@Library('jenkins-shared-libs')
+import static com.ericsson.orchestration.mgmt.libs.VnfmJenkins.getAgentLabel
+
+
+// Stages template
+def stages = [:]
+// Set Agent label
+String label = getAgentLabel( type: 'concurrent',
+                              this)
+
+
+node(label) {
+    try {
+        // Set Job's ENVs
+        env.JOB_TYPE = 'ha-tests'
+        env.GLOBAL_VAR_PATH = 'jenkins/global.var'
+        env.VAR_PATH = 'jenkins/evnfm-test/project.var'
+        env.ENV_LABEL = 'evnfm-ha-tests'
+        env.EO_HELMFILE_BASE_VERSION = params.EO_HELMFILE_BASE_VERSION
+        env.PATH_TO_SITE_VALUES_OVERRIDE_FILE = params.PATH_TO_SITE_VALUES_OVERRIDE_FILE
+        env.PATH_TO_TEST = params.PATH_TO_TEST
+        env.GERRIT_BRANCH = params.GERRIT_BRANCH
+        env.GERRIT_REFSPEC = params.GERRIT_REFSPEC
+
+
+        // Run Prepare Stage
+        stage('Prepare') {
+            println('INFO: Checkout CI code...')
+            checkout(scm)
+
+            println('INFO: Load Global vars...')
+            load(env.GLOBAL_VAR_PATH)
+
+            println('INFO: Load Project vars...')
+            load(env.VAR_PATH)
+
+            println('INFO: Load Stages...')
+            stages['jobs'] = load(env.JOBS_STAGE)
+            stages['run-job'] = load(env.RUN_JOB_STAGE)
+        }
+
+        // Run Set Job Parameter Stage
+        stages['jobs'].SetJobParameter( name: 'DEPLOY_PARAMS',
+                                        job: 'ha-deploy',
+                                        stage: 'Set Deploy job parameters')
+
+        // Run Deploy Stage
+        stages['run-job'].LocalJob( name: env.HA_DEPLOY_JOB,
+                                    params: evaluate(env.DEPLOY_PARAMS),
+                                    artifact: 'artifact.properties')
+
+        // Run Set Job Parameter Stage
+        env.DEPLOY_ART = env.ARTIFACTS_DIR + '/' + env.HA_DEPLOY_JOB + '.artifact'
+        stages['jobs'].SetJobParameter( name: 'HA_TESTS_PARAMS',
+                                        job: 'ha-tests',
+                                        artifact: env.DEPLOY_ART,
+                                        stage: 'Set HA Tests parameters')
+
+        // Run HA Robustness Tests Stage
+        stages['run-job'].LocalJob( name: env.HA_ROBUSTNESS_TESTS_JOB,
+                                    params: evaluate(env.HA_TESTS_PARAMS),
+                                    stage: 'HA Robustness Tests')
+
+    } catch (Exception errJob) {
+        println(errJob)
+        currentBuild.result = 'FAILURE'
+    } finally {
+        // Run Set Job Parameter Stage
+        stages['jobs'].SetJobParameter( name: 'UNLOCK_PARAMS',
+                                        job: 'unlock',
+                                        artifact: env.DEPLOY_ART,
+                                        stage: 'Set Unlock parameters')
+
+        // Run Job UNLOCK
+        stages['run-job'].LocalJob( name: env.UNLOCK_JOB,
+                                    params: evaluate(env.UNLOCK_PARAMS),
+                                    wait: false,
+                                    stage: 'Unlock Install Environment')
+
+        // Clean workspace
+        cleanWs()
+    }
+}

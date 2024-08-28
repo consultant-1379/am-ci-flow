@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<settings xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/settings-1.0.0.xsd">
+  <mirrors>
+    <mirror>
+      <!-- Sends all other requests to Nexus group instead of to Maven central directly -->
+      <id>nexus</id>
+      <mirrorOf>external:*,central</mirrorOf>
+      <url>https://arm1s11-eiffel052.eiffel.gic.ericsson.se:8443/nexus/content/groups/eo-repositories</url>
+    </mirror>
+  </mirrors>
+
+  <profiles>
+    <profile>
+      <id>active</id>
+      <repositories>
+        <repository>
+          <id>eiffel052Nexus</id>
+          <name>eo-repositories</name>
+          <url>https://arm1s11-eiffel052.eiffel.gic.ericsson.se:8443/nexus/content/groups/eo-repositories</url>
+        </repository>
+        <repository>
+          <id>central</id>
+          <name>maven-central</name>
+          <url>http://central</url>
+        </repository>
+      </repositories>
+    </profile>
+  </profiles>
+
+  <servers>
+    <server>
+      <id>eo-releases</id>
+      <username>amadm100</username>
+      <password>{WNI/Z/1GCh0HK4Rzt0gXYonPSi8S/Qe/3ptlPFRTe657YqUXO3Ccg37B50cfB9nU}</password>
+    </server>
+     <server>
+      <id>eo-snapshots</id>
+      <username>amadm100</username>
+      <password>{WNI/Z/1GCh0HK4Rzt0gXYonPSi8S/Qe/3ptlPFRTe657YqUXO3Ccg37B50cfB9nU}</password>
+    </server>
+  </servers>
+
+  <activeProfiles>
+    <activeProfile>active</activeProfile>
+  </activeProfiles>
+
+</settings>

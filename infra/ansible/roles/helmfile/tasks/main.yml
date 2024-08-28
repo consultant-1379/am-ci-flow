@@ -1,0 +1,39 @@
+- name: "Check Helmfile"
+  shell: "helmfile version -o=short"
+  register: helmfile_check
+  ignore_errors: true
+  changed_when: false
+
+- name: "Download Helmfile binary"
+  get_url:
+    url: "{{ helmfile_url }}/{{ helmfile_version }}/helmfile-{{ helmfile_version }}.gz"
+    dest: "/tmp/helmfile-{{ helmfile_version }}.gz"
+    mode: "775"
+    force: true
+  when: helmfile_check.stdout == ""
+
+- name: "Install Helmfile"
+  shell: "{{ item }}"
+  with_items:
+    - "tar -xvf helmfile-{{ helmfile_version }}.gz"
+    - "chmod +x helmfile"
+    - "mv helmfile /usr/bin/helmfile"
+  args:
+    warn: false
+    chdir: "/tmp"
+  when: helmfile_check.stdout == ""
+
+- name: "Post-Install Helmfile"
+  shell: "{{ item }}"
+  with_items:
+    - "rm -f helmfile-{{ helmfile_version }}.gz"
+  args:
+    warn: false
+    chdir: "/tmp"
+  ignore_errors: true
+  when: helmfile_check.stdout == ""
+
+- name: "Helmfile status"
+  debug:
+    msg: "Helmfile version: {{ helmfile_check.stdout }}"
+  when: helmfile_check.stdout

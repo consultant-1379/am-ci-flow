@@ -1,0 +1,43 @@
+#
+# COPYRIGHT Ericsson 2024
+#
+#
+#
+# The copyright to the computer program(s) herein is the property of
+#
+# Ericsson Inc. The programs may be used and/or copied only with written
+#
+# permission from Ericsson Inc. or in accordance with the terms and
+#
+# conditions stipulated in the agreement/contract under which the
+#
+# program(s) have been supplied.
+#
+
+# Gerrit Quality Checks Job
+gerritQualityChecks:
+  name: "gerrit-quality-checks"
+  description: "Pipeline for gerrit quality review as a part of Gerrit verification process"
+  file: "jenkins/pipelines/gerrit-quality-checks/base/Jenkinsfile"
+  maxLogDays: "14"
+  maxLogBuilds: "20"
+  gerritBranch: ".*"
+  gerritTriggers: "Patchset Created" # Values: "Submit-To-Pipeline"; "Change Merged"; "Patchset Created"; false
+  parallelRun: false
+  enable: true
+# Post-Merge Job
+postMerge:
+  name: "post-merge"
+  description: "Pipeline for Post-Merge actions"
+  file: "jenkins/pipelines/post-merge/jira/Jenkinsfile"
+  maxLogDays: "7"
+  maxLogBuilds: "20"
+  gerritBranch: "master"
+  gerritTriggers: "Change Merged" # Values: "Submit-To-Pipeline"; "Change Merged"; "Patchset Created"; false
+  parallelRun: false
+  enable: true
+  parameters:
+    GERRIT_CHANGE_SUBJECT:
+      type: "string"
+      value: ""
+      description: "Subject of Gerrit change"

@@ -1,0 +1,83 @@
+#
+# COPYRIGHT Ericsson 2024
+#
+#
+#
+# The copyright to the computer program(s) herein is the property of
+#
+# Ericsson Inc. The programs may be used and/or copied only with written
+#
+# permission from Ericsson Inc. or in accordance with the terms and
+#
+# conditions stipulated in the agreement/contract under which the
+#
+# program(s) have been supplied.
+#
+
+- name: "evo_docker_engine_ipv6"
+  agents:
+    - "ipv6_docker_slave"
+- name: "ipv6"
+  agents:
+    - "ipv6_docker_slave"
+- name: "cnam"
+  agents:
+    - "process-engine-01"
+    - "process-engine-02"
+- name: "package_manager"
+  agents:
+    - "process-engine-01"
+    - "process-engine-02"
+- name: "cleanup"
+  agents:
+    - "process-engine-01"
+- name: "java17"
+  agents:
+    - "process-engine-06"
+    - "process-engine-07"
+    - "process-engine-08"
+    - "process-engine-09"
+    - "process-engine-10"
+    - "process-engine-11"
+    - "process-engine-14"
+- name: "gerrit-docker"
+  agents:
+    - "process-engine-06"
+    - "process-engine-07"
+    - "process-engine-08"
+    - "process-engine-09"
+    - "process-engine-10"
+    - "process-engine-11"
+    - "process-engine-14"
+- name: "pre-release"
+  agents:
+    - "process-engine-03"
+    - "process-engine-05"
+    - "process-engine-15"
+    - "process-engine-18"
+    - "process-engine-19"
+    - "process-engine-20"
+- name: "cvnfm"
+  agents:
+    - "process-engine-12"
+    - "process-engine-13"
+- name: "am_slave"
+  agents:
+    - "process-engine-06"
+    - "process-engine-07"
+    - "process-engine-08"
+    - "process-engine-09"
+    - "process-engine-10"
+    - "process-engine-11"
+    - "process-engine-14"
+- name: "performance"
+  agents:
+    - "process-engine-16"
+    - "process-engine-17"
+- name: "GR"
+  agents:
+    - "process-engine-16"
+    - "process-engine-17"
+- name: "performance_docreq_mr"
+  agents:
+    - process-engine-04

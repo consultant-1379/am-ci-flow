@@ -1,0 +1,42 @@
+/*******************************************************************************
+ * COPYRIGHT Ericsson 2024
+ *
+ *
+ *
+ * The copyright to the computer program(s) herein is the property of
+ *
+ * Ericsson Inc. The programs may be used and/or copied only with written
+ *
+ * permission from Ericsson Inc. or in accordance with the terms and
+ *
+ * conditions stipulated in the agreement/contract under which the
+ *
+ * program(s) have been supplied.
+ ******************************************************************************/
+// Job's name ENVs
+env.RELEASE_JOB = 'event-to-fi_release-flow'
+
+
+// GIT ENVs
+env.GERRIT_PROJECT = 'eric-eo-fh-event-to-alarm-adapter'
+env.GIT_COMMIT_FILES = '''  pom.xml \\
+                          | eric-eo-fh-event-*/pom.xml \\
+                          | charts/*/eric-product-info.yaml'''.stripMargin()
+
+
+// Docker ENVs
+env.DOCKER_DIR = '.'
+env.DOCKER_URL = 'armdocker.rnd.ericsson.se/proj-am'
+
+
+// Sonar ENVs
+env.SONAR_PROJECT = 'com.ericsson.oss.ro:eric-eo-fh-event-to-alarm-adapter'
+env.SONAR_SERVER = 'SonarQubeDCE'
+
+
+// Build ENVs
+env.NAMESPACE_SUF = 'eventfi-' + BUILD_NUMBER
+env.DEPENDENCY_CHART_LOCATION = 'charts/eric-eo-fh-event-to-alarm-adapter-dependency'
+env.APP_NAME = 'eric-oss-function-orchestration-common'
+env.SPINNNAKER_HOOK_NAME = 'event-to-alarm-adapter'
+env.SKIP_UA_TESTS = true

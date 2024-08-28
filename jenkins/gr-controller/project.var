@@ -1,0 +1,57 @@
+/*******************************************************************************
+ * COPYRIGHT Ericsson 2024
+ *
+ *
+ *
+ * The copyright to the computer program(s) herein is the property of
+ *
+ * Ericsson Inc. The programs may be used and/or copied only with written
+ *
+ * permission from Ericsson Inc. or in accordance with the terms and
+ *
+ * conditions stipulated in the agreement/contract under which the
+ *
+ * program(s) have been supplied.
+ ******************************************************************************/
+// Job's name ENVs
+env.RELEASE_JOB = 'gr-controller_release-flow'
+env.GR_TEST_JOB = 'gr-controller_testing'
+
+
+// GIT ENVs
+env.GERRIT_PROJECT = 'gr-controller'
+env.GIT_COMMIT_FILES = 'pom.xml'
+
+
+// Build ENVs
+env.SPINNNAKER_HOOK_NAME = 'eric-gr-bur-orchestrator'
+env.SKIP_RELEASE_ARTIFACT = true
+env.PRIMARY_OVERRIDE_FILE = 'site-values/eo/ci/override/gr/gr-primary.yaml'
+env.SECONDARY_OVERRIDE_FILE = 'site-values/eo/ci/override/gr/gr-secondary.yaml'
+env.FLOW_URL_TAG = 'EVNFM GR'
+env.HOSTNAME_TYPE = 'aws'
+
+
+// Docker ENVs
+env.DOCKER_URL = 'armdocker.rnd.ericsson.se/proj-am'
+env.DOCKER_DIR = 'docker'
+env.EGRESS_MODIFIER_IMAGE_NAME = 'eric-gr-egress-modifier'
+env.EGRESS_MODIFIER_DOCKER_DIR = env.DOCKER_DIR + '/egress-modifier'
+env.GR_CONTROLLER_IMAGE_NAME = 'eric-gr-bur-orchestrator'
+env.GR_CONTROLLER_DOCKER_DIR = env.DOCKER_DIR + '/gr-controller'
+env.STUB_IMAGE_NAME = 'eric-eo-secondary-site-stub'
+env.STUB_DOCKER_DIR = env.DOCKER_DIR + '/stubs'
+env.IMAGE_DESIGN_RULES_FILE = 'docker/image_exclude_rules'
+
+
+// Helm ENVs
+env.APP_NAME = 'eric-oss-function-orchestration-common'
+env.CHART_NAME = 'eric-eo-secondary-site-stub, eric-gr-bur-orchestrator'
+env.MAIN_CHART_NAME = 'eric-gr-bur-orchestrator'
+env.CHART_FOLDER = 'charts'
+env.DESIGN_RULES_FILE = 'charts/exclude_rules'
+
+
+// Sonar ENVs
+env.SONAR_PROJECT = 'com.ericsson.oss.orchestration.eo.gr:gr-controller'
+env.SONAR_SERVER = 'SonarQubeDCE'

@@ -1,0 +1,92 @@
+#!/usr/bin/env groovy
+
+@Library('jenkins-shared-libs')
+import static com.ericsson.orchestration.mgmt.libs.VnfmJenkins.getAgentLabel
+import static com.ericsson.orchestration.mgmt.libs.VnfmJenkins.getSeedJobName
+
+
+// Stages template
+def stages = [:]
+// Set Agent label
+String label = getAgentLabel( type: 'concurrent',
+                              this)
+
+
+node(label) {
+    try {
+        // Set Job's ENVs
+        env.SEED_JOB = getSeedJobName(JOB_NAME)
+        env.JOB_TYPE = 'gr-deploy'
+        env.GLOBAL_VAR_PATH = 'jenkins/global.var'
+        env.VAR_PATH = 'jenkins/' + env.SEED_JOB + '/project.var'
+        env.DEPLOYMENT_TYPE = params.DEPLOYMENT_TYPE
+        env.INT_CHART_NAME = params.INT_CHART_NAME
+        env.INT_CHART_REPO = params.INT_CHART_REPO
+        env.INT_CHART_VERSION = params.INT_CHART_VERSION
+        env.PRIMARY_ENV = params.PRIMARY_ENV
+        env.SECONDARY_ENV = params.SECONDARY_ENV
+        env.OSS_INTEGRATION_CI_REFSPEC = params.OSS_INTEGRATION_CI_REFSPEC
+
+
+        // Run Prepare Stage
+        stage('Prepare') {
+            println('INFO: Checkout CI code...')
+            checkout(scm)
+
+            println('INFO: Load Global vars...')
+            load(env.GLOBAL_VAR_PATH)
+
+            println('INFO: Load Project vars...')
+            load(env.VAR_PATH)
+
+            println('INFO: Load Stages...')
+            stages['git'] = load(env.GIT_STAGE)
+            stages['envs'] = load(env.ENVS_STAGE)
+            stages['run-job'] = load(env.RUN_JOB_STAGE)
+            stages['jobs'] = load(env.JOBS_STAGE)
+            stages['post'] = load(env.POST_STAGE)
+        }
+
+        // Run Checkout Stage
+        stages['git'].CheckoutProject(project: env.INTEGRATION_CI_PROJECT,
+                                      branch: env.INTEGRATION_CI_BRANCH)
+
+        // Run Update ENVs Stage
+        stages['envs'].RunUpdateEVNFM(env.INTEGRATION_CI_PROJECT)
+
+        parallel(
+            'Primary Site': {
+                // Run Set Job Parameter Stage for Primary Site
+                stages['jobs'].SetJobParameter( name: 'PRIMARY_DEPLOY_PARAMS',
+                                                job: 'gr-helmfile-deploy',
+                                                stage: 'Set Primary Site deploy parameters')
+
+                // Run Helmfile Install Stage for Primary Site
+                stages['run-job'].LocalJob( name: env.HELMFILE_DEPLOY_JOB,
+                                            params: evaluate(env.PRIMARY_DEPLOY_PARAMS),
+                                            artifact: 'artifact.properties',
+                                            stage: 'Install Primary Site')
+            },
+            'Secondary Site': {
+                // Run Set Job Parameter Stage for Secondary Site
+                sleep(60)
+                stages['jobs'].SetJobParameter( name: 'SECONDARY_DEPLOY_PARAMS',
+                                                job: 'gr-helmfile-deploy',
+                                                stage: 'Set Secondary Site deploy parameters')
+
+                // Run Helmfile Install Stage for Secondary Site
+                stages['run-job'].LocalJob( name: env.HELMFILE_DEPLOY_JOB,
+                                            params: evaluate(env.SECONDARY_DEPLOY_PARAMS),
+                                            artifact: 'artifact.properties',
+                                            stage: 'Install Secondary Site')
+            }
+        )
+
+    } catch (Exception errJob) {
+        println(errJob)
+        currentBuild.result = 'FAILURE'
+    } finally {
+        // Run Post Actions Stage
+        stages['post'].GRDeploy(status: currentBuild.result ?: 'SUCCESS')
+    }
+}

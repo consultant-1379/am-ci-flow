@@ -1,0 +1,9 @@
+{
+    "ipv6": true,
+    "fixed-cidr-v6": "fd00::/80",
+    "debug": true,
+{% set mirror %}
+{% for elem in docker_mirror %}"{{ elem }}", {% endfor %}
+{%- endset %}
+    "registry-mirrors": [{{ mirror[:-2] }}]
+}

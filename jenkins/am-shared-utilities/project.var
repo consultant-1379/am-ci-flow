@@ -1,0 +1,31 @@
+/*******************************************************************************
+ * COPYRIGHT Ericsson 2024
+ *
+ *
+ *
+ * The copyright to the computer program(s) herein is the property of
+ *
+ * Ericsson Inc. The programs may be used and/or copied only with written
+ *
+ * permission from Ericsson Inc. or in accordance with the terms and
+ *
+ * conditions stipulated in the agreement/contract under which the
+ *
+ * program(s) have been supplied.
+ ******************************************************************************/
+// GIT ENVs
+env.GERRIT_PROJECT = 'am-shared-utilities'
+env.GIT_COMMIT_FILES = '''  pom.xml \\
+                          | eric-am-shared-*/pom.xml'''.stripMargin()
+
+
+// Sonar ENVs
+env.SONAR_PROJECT = 'com.ericsson.orchestration.mgmt:eric-am-shared-utilities'
+env.SONAR_SERVER = 'SonarQubeDCE'
+
+
+// Build ENVs
+env.SKIP_UNIT_TESTS = true
+env.SKIP_E2E_TESTS = false
+env.SKIP_PRERELEASE = true
+env.SKIP_HELMFILE = true

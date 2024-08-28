@@ -1,0 +1,57 @@
+---
+- name: install python dev modules
+  become: true
+  yum:
+    name: ['gcc','python-devel', 'python3-devel', 'python34-devel']
+    state: present
+    update_cache: yes
+- name: add yum repositories
+  shell: "yum-config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo"
+  become: true
+  become_user: root
+- name: install prerequisite packages jenkins slaves
+  yum:
+    name:
+    - https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm
+    state: present
+  become: true
+  become_user: root
+- name: install packages jenkins slaves
+  become: true
+  become_user: root
+  yum:
+    name:
+    - jq
+    - docker-ce
+    - docker-ce-cli
+    - containerd.io
+    - unzip
+    - python3
+    state: present
+    update_cache: yes
+- name: install java
+  yum:
+    name: "java-{{ java_version }}-openjdk-devel"
+    state: present
+  become: true
+  become_user: root
+- name: uninstall git 1.8
+  become: true
+  become_user: amadm100
+  shell: sudo yum -y remove git*
+- name: add repo for git 2.x
+  become: true
+  become_user: root
+  yum:
+    name:
+    - https://packages.endpoint.com/rhel/7/os/x86_64/endpoint-repo-1.7-1.x86_64.rpm
+    state: present
+    update_cache: yes
+- name: install git 2.x
+  become: true
+  become_user: root
+  yum:
+    name:
+    - git
+    state: present
+    update_cache: yes

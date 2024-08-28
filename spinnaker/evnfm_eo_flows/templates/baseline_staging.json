@@ -1,0 +1,503 @@
+{
+    "description": "This pipeline is maintained by spinnaker as a code, any changes made through the ui will be overwritten. Template name: baseline_staging from the repository am-ci-flow in the directory spinnaker/evnfm_eo_flows/templates",
+    "schema": "1",
+    "spelEvaluator": "v4",
+    "parameterConfig": [
+        {
+            "name": "TRIGGER",
+            "default": "",
+            "description": "",
+            "hasOptions": false,
+            "pinned": false,
+            "required": false
+        },
+        {
+            "name": "CHART_NAME",
+            "default": "",
+            "description": "Name of the microservice chart within the integration chart",
+            "hasOptions": false,
+            "pinned": true,
+            "required": false
+        },
+        {
+            "name": "CHART_VERSION",
+            "default": "",
+            "description": "Version of the microservice chart within the integration chart",
+            "hasOptions": false,
+            "pinned": true,
+            "required": false
+        },
+        {
+            "name": "CHART_REPO",
+            "default": "",
+            "description": "Repo of the microservice chart within the integration chart",
+            "hasOptions": false,
+            "pinned": true,
+            "required": false
+        },
+        {
+            "name": "TAGS",
+            "default": "eoEvnfm",
+            "description": "Site values tags which has to be set to true during deployment",
+            "hasOptions": false,
+            "pinned": true,
+            "required": true
+        },
+        {
+            "name": "GERRIT_REFSPEC",
+            "default": "",
+            "description": "Gerrit REF Spec is used by Inca to pull down a code review to build a new OSS Common Base",
+            "hasOptions": false,
+            "pinned": true,
+            "required": false
+        },
+        {
+            "name": "ENV_LABEL",
+            "default": "evnfm-release",
+            "description": "This is the label to search for that is attached to the environments in the Lockable Resource Plugin on Jenkins",
+            "hasOptions": false,
+            "pinned": true,
+            "required": true
+        },
+        {
+          "name": "FLOW_URL_TAG",
+          "default": "EVNFM App Staging",
+          "description": "Flow URL Tag is used when locking the environment to add a tag to describe what has locked the environment for easier tracking",
+          "hasOptions": false,
+          "pinned": false,
+          "required": true
+        },
+        {
+            "name": "WAIT_TIME",
+            "default": "240",
+            "description": "This is the time to wait for an Environment to become available. After the time expires the job will fail out",
+            "hasOptions": false,
+            "pinned": false,
+            "required": true
+        },
+        {
+            "name": "SKIP_CHART_RELEASE",
+            "default": "false",
+            "description": "If set to true - new Application chart will not be released.  We can use that when ADP dependent chart version comes with \"-\" and we want to include in chart only \"+\" drops",
+            "hasOptions": true,
+            "options": [
+                { "value": "true" },
+                { "value": "false" }
+            ],
+            "pinned": true,
+            "required": true
+        },
+        {
+            "name": "RCR_TAG",
+            "default": "EO_APP_Staging",
+            "description": "EOA Tag is used to identify the environment by Report Center Registration Stage. Dashboard link: https://data-analytics-kibana.ews.gic.ericsson.se/s/eo/app/dashboards#/view/ffd5df70-f626-11ed-9a45-c5fa81db13d3?_g=(filters:!())",
+            "hasOptions": false,
+            "pinned": true,
+            "required": false
+        }
+    ],
+    "stages": [
+        {
+            "name": "Get Stable Helmfile Version",
+            "refId": "getStableHelmfileVersion",
+            "requisiteStageRefIds": [],
+            "continuePipeline": true,
+            "failPipeline": false,
+            "type": "jenkins",
+            "master": "dss-aispinn-fem4s11-eiffel052",
+            "job": "tools_get-chart-version",
+            "parameters": {
+                "CHART_NAME": "eo-helmfile",
+                "VERSION_TYPE": "stable"
+            },
+            "propertyFile": "artifact.properties"
+        },
+        {
+            "name": "Fetch Build Upload APP Snapshot",
+            "refId": "2",
+            "requisiteStageRefIds": [],
+            "continuePipeline": true,
+            "failPipeline": false,
+            "type": "jenkins",
+            "master": "oss-aispinn-fem5s11-eiffel052",
+            "job": "OSS-CI-Fetch-Build-Upload",
+            "parameters": {
+                "ALLOW_DOWNGRADE": "false",
+                "ARMDOCKER_USER_SECRET": "ossapps100-arm-docker-auth-config",
+                "CHART_NAME": "${trigger['parameters']['CHART_NAME']}",
+                "CHART_PATH": "charts/eric-eo-evnfm",
+                "CHART_REPO": "${trigger['parameters']['CHART_REPO']}",
+                "CHART_VERSION": "${trigger['parameters']['CHART_VERSION']}",
+                "GERRIT_REFSPEC": "${trigger['parameters']['GERRIT_REFSPEC']}",
+                "GERRIT_USER_SECRET": "ossapps100-user-creds",
+                "GIT_REPO_URL": "https://gerrit-gamma.gic.ericsson.se/a/OSS/com.ericsson.orchestration.mgmt/am-integration-charts.git",
+                "HELM_DROP_REPO": "https://arm.seli.gic.ericsson.se/artifactory/proj-eo-evnfm-drop-helm",
+                "HELM_INTERNAL_REPO": "https://arm.seli.gic.ericsson.se/artifactory/proj-eo-evnfm-snapshot-helm-local",
+                "HELM_RELEASED_REPO": "https://arm.seli.gic.ericsson.se/artifactory/proj-eo-evnfm-drop-helm",
+                "HELM_REPO_CREDENTIALS_ID": "ossapps100_helm_repository_creds_file",
+                "VCS_BRANCH": "master",
+                "WAIT_SUBMITTABLE_BEFORE_PUBLISH": "false"
+            },
+            "propertyFile": "artifact.properties"
+        },
+        {
+            "name": "Helmfile Fetch Build Upload Snapshot",
+            "refId": "3",
+            "requisiteStageRefIds": [
+                "2"
+            ],
+            "continuePipeline": true,
+            "failPipeline": false,
+            "type": "jenkins",
+            "master": "oss-aispinn-fem5s11-eiffel052",
+            "job": "OSS-Integration-Fetch-Build-Upload-Using-ADP-Inca",
+            "parameters": {
+                "ALLOW_DOWNGRADE": "false",
+                "ARMDOCKER_USER_SECRET": "cloudman-docker-auth-config",
+                "CHART_NAME": "${#stage('Fetch Build Upload APP Snapshot')['context']['INT_CHART_NAME']}",
+                "CHART_REPO": "${#stage('Fetch Build Upload APP Snapshot')['context']['INT_CHART_REPO']}",
+                "CHART_VERSION": "${#stage('Fetch Build Upload APP Snapshot')['context']['INT_CHART_VERSION']}",
+                "GERRIT_REFSPEC": "",
+                "GERRIT_USER_SECRET": "cloudman-user-creds",
+                "GIT_REPO_URL": "https://gerrit-gamma.gic.ericsson.se/a/OSS/com.ericsson.oss.eo/eo-helmfile.git",
+                "HELM_DROP_REPO": "https://arm.seli.gic.ericsson.se/artifactory/proj-eo-drop-helm",
+                "HELM_INTERNAL_REPO": "https://arm.seli.gic.ericsson.se/artifactory/proj-eo-snapshot-helm",
+                "ALWAYS_RELEASE": "false",
+                "AUTOMATIC_RELEASE": "true",
+                "CHART_PATH": "helmfile",
+                "CHECK_PUBLISHED": "false",
+                "HELM_REPO_CREDENTIALS_ID": "eoadm100_helm_repository_creds",
+                "STATE_VALUES_FILE": ".bob/tmp_repo/testsuite/helm-chart-validator/site_values.yaml",
+                "VERSION_STEP_STRATEGY_DEPENDENCY": "PATCH",
+                "VERSION_STEP_STRATEGY_MANUAL": "PATCH",
+                "VCS_BRANCH": "master"
+            },
+            "propertyFile": "artifact.properties",
+            "stageEnabled": {
+                "expression": "${#stage('Fetch Build Upload APP Snapshot')['status'].toString() == 'SUCCEEDED'}",
+                "type": "expression"
+            }
+        },
+        {
+            "name": "Reserve Namespace",
+            "refId": "4",
+            "requisiteStageRefIds": [],
+            "continuePipeline": true,
+            "failPipeline": false,
+            "type": "jenkins",
+            "master": "dss-aispinn-fem4s11-eiffel052",
+            "job": "tools_lock-resource",
+            "parameters": {
+                "ENV_LABEL": "${parameters['ENV_LABEL']}",
+                "FLOW_URL": "https://spinnaker.rnd.gic.ericsson.se/#/applications/${execution['application']}/executions/details/${execution.id}",
+                "FLOW_URL_TAG": "${parameters['FLOW_URL_TAG']}",
+                "WAIT_TIME": "${parameters['WAIT_TIME']}"
+            },
+            "propertyFile": "artifact.properties"
+        },
+        {
+            "name": "Get Env Details",
+            "refId": "5",
+            "requisiteStageRefIds": [
+                "4"
+            ],
+            "continuePipeline": true,
+            "failPipeline": false,
+            "type": "jenkins",
+            "master": "oss-aispinn-fem5s11-eiffel052",
+            "job": "EO-Integration-Gather-Env-Details",
+            "parameters": {
+                "ENV_DETAILS_DIR": "honeypots/pooling/environments",
+                "ENV_NAME": "${#stage('Reserve Namespace')['context']['RESOURCE_NAME']}"
+            },
+            "propertyFile": "artifact.properties",
+            "stageEnabled": {
+                "expression": "${#stage('Reserve Namespace')['status'].toString() == 'SUCCEEDED'}",
+                "type": "expression"
+            }
+        },
+        {
+            "name": "Create Namespace",
+            "refId": "6",
+            "requisiteStageRefIds": [
+                "5"
+            ],
+            "continuePipeline": true,
+            "failPipeline": false,
+            "type": "jenkins",
+            "master": "oss-aispinn-fem5s11-eiffel052",
+            "job": "Create_Namespace",
+            "parameters": {
+                "KUBECONFIG_FILE": "${#stage('Get Env Details')['context']['KUBE_CONFIG']}",
+                "NAMESPACE": "${#stage('Get Env Details')['context']['NAMESPACE']}",
+                "EVNFM_CT_REGISTRY_HOST": "${#stage('Get Env Details')['context']['EO_VNFM_REGISTRY_HOSTNAME_ICCR']}",
+                "SKIP_TOKEN_REFRESH": "true"
+            },
+            "stageEnabled": {
+                "expression": "${#stage('Get Env Details')['status'].toString() == 'SUCCEEDED'}",
+                "type": "expression"
+            }
+        },
+        {
+            "name": "Install using Helmfile",
+            "refId": "7",
+            "requisiteStageRefIds": [
+                "getStableHelmfileVersion",
+                "6"
+            ],
+            "continuePipeline": true,
+            "failPipeline": false,
+            "type": "jenkins",
+            "master": "oss-aispinn-fem5s11-eiffel052",
+            "job": "EO-Integration-Helmfile-Deploy",
+            "parameters": {
+                "INT_CHART_NAME": "eric-eo-helmfile",
+                "INT_CHART_REPO": "https://arm.seli.gic.ericsson.se/artifactory/proj-eo-drop-helm",
+                "INT_CHART_VERSION": "${#stage('Get Stable Helmfile Version')['context']['CHART_VERSION']}",
+                "FH_SNMP_ALARM_IP": "${#stage('Get Env Details')['context']['SNMP_IP']}",
+                "GAS_HOSTNAME": "${#stage('Get Env Details')['context']['EO_GAS_HOSTNAME_ICCR']}",
+                "HELM_REGISTRY_HOSTNAME": "${#stage('Get Env Details')['context']['EO_HELM_REGISTRY_HOSTNAME_ICCR']}",
+                "IAM_HOSTNAME": "${#stage('Get Env Details')['context']['IAM_HOSTNAME_ICCR']}",
+                "INGRESS_CLASS": "${#stage('Get Env Details')['context']['INGRESS_CLASS']}",
+                "INGRESS_IP": "${#stage('Get Env Details')['context']['INGRESS_IP']}",
+                "KUBECONFIG_FILE": "${#stage('Get Env Details')['context']['KUBE_CONFIG']}",
+                "NAMESPACE": "${#stage('Get Env Details')['context']['NAMESPACE']}",
+                "VNFM_HOSTNAME": "${#stage('Get Env Details')['context']['EO_VNFM_HOSTNAME_ICCR']}",
+                "VNFM_REGISTRY_HOSTNAME": "${#stage('Get Env Details')['context']['EO_VNFM_REGISTRY_HOSTNAME_ICCR']}",
+                "TAGS": "${trigger['parameters']['TAGS']}",
+                "ARMDOCKER_USER_SECRET": "cloudman-docker-auth-config",
+                "CRD_NAMESPACE": "eric-crd-ns",
+                "FULL_PATH_TO_SITE_VALUES_FILE": "site-values/eo/ci/template/site-values-latest.yaml",
+                "HELM_REGISTRY_DEPLOY": "true",
+                "PATH_TO_CERTIFICATES_FILES": "eo-integration-ci/${#stage('Get Env Details')['context']['PATH_TO_CERTIFICATES_FILES_ICCR']}",
+                "HELM_TIMEOUT": "1800",
+                "PATH_TO_SITE_VALUES_OVERRIDE_FILE": "site-values/eo/ci/override/override-site-values-appstaging.yaml",
+                "SLAVE_LABEL": "evo_docker_engine_gic",
+                "USE_DM_PREPARE": "true",
+                "USE_SKIP_IMAGE_PUSH": "true",
+                "VERBOSITY": "4"
+            },
+            "propertyFile": "artifact.properties",
+            "stageEnabled": {
+                "expression": "${#stage('Get Stable Helmfile Version')['status'].toString() == 'SUCCEEDED' and #stage('Create Namespace')['status'].toString() == 'SUCCEEDED'}",
+                "type": "expression"
+            }
+        },
+        {
+            "name": "Upgrade using Helmfile",
+            "refId": "8",
+            "requisiteStageRefIds": [
+                "3",
+                "7"
+            ],
+            "continuePipeline": true,
+            "failPipeline": false,
+            "type": "jenkins",
+            "master": "oss-aispinn-fem5s11-eiffel052",
+            "job": "EO-Integration-Helmfile-Deploy",
+            "parameters": {
+                "INT_CHART_NAME": "${#stage('Helmfile Fetch Build Upload Snapshot')['context']['INT_CHART_NAME']}",
+                "INT_CHART_REPO": "${#stage('Helmfile Fetch Build Upload Snapshot')['context']['INT_CHART_REPO']}",
+                "INT_CHART_VERSION": "${#stage('Helmfile Fetch Build Upload Snapshot')['context']['INT_CHART_VERSION']}",
+                "FH_SNMP_ALARM_IP": "${#stage('Get Env Details')['context']['SNMP_IP']}",
+                "GAS_HOSTNAME": "${#stage('Get Env Details')['context']['EO_GAS_HOSTNAME_ICCR']}",
+                "HELM_REGISTRY_HOSTNAME": "${#stage('Get Env Details')['context']['EO_HELM_REGISTRY_HOSTNAME_ICCR']}",
+                "IAM_HOSTNAME": "${#stage('Get Env Details')['context']['IAM_HOSTNAME_ICCR']}",
+                "INGRESS_CLASS": "${#stage('Get Env Details')['context']['INGRESS_CLASS']}",
+                "INGRESS_IP": "${#stage('Get Env Details')['context']['INGRESS_IP']}",
+                "KUBECONFIG_FILE": "${#stage('Get Env Details')['context']['KUBE_CONFIG']}",
+                "NAMESPACE": "${#stage('Get Env Details')['context']['NAMESPACE']}",
+                "VNFM_HOSTNAME": "${#stage('Get Env Details')['context']['EO_VNFM_HOSTNAME_ICCR']}",
+                "VNFM_REGISTRY_HOSTNAME": "${#stage('Get Env Details')['context']['EO_VNFM_REGISTRY_HOSTNAME_ICCR']}",
+                "PATH_TO_CERTIFICATES_FILES": "eo-integration-ci/${#stage('Get Env Details')['context']['PATH_TO_CERTIFICATES_FILES_ICCR']}",
+                "TAGS": "${trigger['parameters']['TAGS']}",
+                "ARMDOCKER_USER_SECRET": "cloudman-docker-auth-config",
+                "CRD_NAMESPACE": "eric-crd-ns",
+                "DEPLOYMENT_TYPE": "upgrade",
+                "FULL_PATH_TO_SITE_VALUES_FILE": "site-values/eo/ci/template/site-values-latest.yaml",
+                "HELM_REGISTRY_DEPLOY": "true",
+                "HELM_TIMEOUT": "1800",
+                "PATH_TO_SITE_VALUES_OVERRIDE_FILE": "site-values/eo/ci/override/override-site-values-appstaging.yaml",
+                "SLAVE_LABEL": "evo_docker_engine_gic",
+                "USE_DM_PREPARE": "true",
+                "USE_SKIP_IMAGE_PUSH": "true",
+                "VERBOSITY": "4"
+            },
+            "propertyFile": "artifact.properties",
+            "stageEnabled": {
+                "expression": "${#stage('Helmfile Fetch Build Upload Snapshot')['status'].toString() == 'SUCCEEDED' and #stage('Install using Helmfile')['status'].toString() == 'SUCCEEDED'}",
+                "type": "expression"
+            }
+        },
+        {
+            "name": "Post Upgrade Testing",
+            "refId": "9",
+            "requisiteStageRefIds": [
+                "8"
+            ],
+            "continuePipeline": true,
+            "failPipeline": false,
+            "type": "pipeline",
+            "application": "evnfm-e2e-cicd",
+            "pipeline": "480b13ac-f760-4a7e-9cf8-0e5474b48153",
+            "pipelineParameters": {
+                "AM_INTEGRATION_REFSPEC": "${trigger['parameters']['GERRIT_REFSPEC'] ?: 'refs/heads/master'}",
+                "CLUSTER": "${#stage('Get Env Details')['context']['CLUSTER']}",
+                "HOST_HELM": "${#stage('Get Env Details')['context']['EO_HELM_REGISTRY_HOSTNAME_ICCR']}",
+                "HOST_IAM": "${#stage('Get Env Details')['context']['IAM_HOSTNAME_ICCR']}",
+                "HOST_VNFM": "${#stage('Get Env Details')['context']['EO_VNFM_HOSTNAME_ICCR']}",
+                "NAMESPACE": "${#stage('Get Env Details')['context']['NAMESPACE']}"
+            },
+            "stageEnabled": {
+                "expression": "${#stage('Upgrade using Helmfile')['status'].toString() == 'SUCCEEDED'}",
+                "type": "expression"
+            }
+        },
+        {
+            "name": "Cleanup Namespace",
+            "refId": "10",
+            "requisiteStageRefIds": [
+                "4",
+                "9"
+            ],
+            "continuePipeline": true,
+            "failPipeline": false,
+            "waitForCompletion": false,
+            "type": "jenkins",
+            "master": "dss-aispinn-fem4s11-eiffel052",
+            "job": "E-VNFM_Unlock-Environment",
+            "parameters": {
+                "ENV_NAME": "${#stage('Reserve Namespace')['context']['RESOURCE_NAME']}"
+            },
+            "stageEnabled": {
+                "expression": "${#stage('Reserve Namespace')['status'].toString() == 'SUCCEEDED'}",
+                "type": "expression"
+            }
+        },
+        {
+            "name": "Fetch Build Upload Release",
+            "refId": "11",
+            "requisiteStageRefIds": [
+                "9"
+            ],
+            "continuePipeline": true,
+            "failPipeline": false,
+            "type": "jenkins",
+            "master": "oss-aispinn-fem5s11-eiffel052",
+            "job": "OSS-CI-Fetch-Build-Upload",
+            "parameters": {
+                "ALLOW_DOWNGRADE": "false",
+                "ARMDOCKER_USER_SECRET": "ossapps100-arm-docker-auth-config",
+                "AUTOMATIC_RELEASE": "false",
+                "CHART_NAME": "${trigger['parameters']['CHART_NAME']}",
+                "CHART_PATH": "charts/eric-eo-evnfm",
+                "CHART_REPO": "${trigger['parameters']['CHART_REPO']}",
+                "CHART_VERSION": "${trigger['parameters']['CHART_VERSION']}",
+                "GERRIT_PREPARE_OR_PUBLISH": "publish",
+                "GERRIT_REFSPEC": "${trigger['parameters']['GERRIT_REFSPEC']}",
+                "GERRIT_USER_SECRET": "ossapps100-user-creds",
+                "GIT_REPO_URL": "https://gerrit-gamma.gic.ericsson.se/a/OSS/com.ericsson.orchestration.mgmt/am-integration-charts.git",
+                "HELM_DROP_REPO": "https://arm.seli.gic.ericsson.se/artifactory/proj-eo-evnfm-drop-helm",
+                "HELM_INTERNAL_REPO": "https://arm.seli.gic.ericsson.se/artifactory/proj-eo-evnfm-snapshot-helm-local",
+                "HELM_RELEASED_REPO": "https://arm.seli.gic.ericsson.se/artifactory/proj-eo-evnfm-drop-helm",
+                "HELM_REPO_CREDENTIALS_ID": "ossapps100_helm_repository_creds_file",
+                "VCS_BRANCH": "master",
+                "WAIT_SUBMITTABLE_BEFORE_PUBLISH": "false"
+            },
+            "propertyFile": "artifact.properties",
+            "stageEnabled": {
+                "expression": "${#stage('Post Upgrade Testing')['status'].toString() == 'SUCCEEDED' and parameters['SKIP_CHART_RELEASE'].toString() == 'false'}",
+                "type": "expression"
+            }
+        },
+        {
+            "name": "Flow Completed",
+            "refId": "35",
+            "requisiteStageRefIds": [
+                "10",
+                "11"
+            ],
+            "type": "checkPreconditions",
+            "preconditions": [
+                {
+                    "context": {
+                        "stageName": "Fetch Build Upload APP Snapshot",
+                        "stageStatus": "SUCCEEDED"
+                    },
+                    "failPipeline": true,
+                    "type": "stageStatus"
+                },
+                {
+                    "context": {
+                        "stageName": "Helmfile Fetch Build Upload Snapshot",
+                        "stageStatus": "SUCCEEDED"
+                    },
+                    "failPipeline": true,
+                    "type": "stageStatus"
+                },
+                {
+                    "context": {
+                        "stageName": "Reserve Namespace",
+                        "stageStatus": "SUCCEEDED"
+                    },
+                    "failPipeline": true,
+                    "type": "stageStatus"
+                },
+                {
+                    "context": {
+                        "stageName": "Create Namespace",
+                        "stageStatus": "SUCCEEDED"
+                    },
+                    "failPipeline": true,
+                    "type": "stageStatus"
+                },
+                {
+                    "context": {
+                        "stageName": "Install using Helmfile",
+                        "stageStatus": "SUCCEEDED"
+                    },
+                    "failPipeline": true,
+                    "type": "stageStatus"
+                },
+                {
+                    "context": {
+                        "stageName": "Upgrade using Helmfile",
+                        "stageStatus": "SUCCEEDED"
+                    },
+                    "failPipeline": true,
+                    "type": "stageStatus"
+                },
+                {
+                    "context": {
+                        "stageName": "Post Upgrade Testing",
+                        "stageStatus": "SUCCEEDED"
+                    },
+                    "failPipeline": true,
+                    "type": "stageStatus"
+                },
+                {
+                    "context": {
+                        "expression": "${#stage('Fetch Build Upload Release')['status'].toString() == 'SUCCEEDED' or #stage('Fetch Build Upload Release')['status'].toString() == 'SKIPPED'}",
+                        "failureMessage": "Fetch Build Upload Release stage was failed"
+                    },
+                    "failPipeline": true,
+                    "type": "expression"
+                }
+            ]
+        },
+        {
+            "name": "Report Center Registraion",
+            "refId": "Report_Center_Registration",
+            "requisiteStageRefIds": [],
+            "continuePipeline": true,
+            "failPipeline": false,
+            "waitForCompletion": false,
+            "type": "jenkins",
+            "master": "oss-fem4s11-eiffel216",
+            "job": "Staging-Report-Register",
+            "parameters": {
+                "EXEC_ID": "${execution.id}"
+            }
+        }
+    ]
+}

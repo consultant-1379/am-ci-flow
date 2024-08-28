@@ -1,0 +1,140 @@
+{
+    "description": "This pipeline is maintained by spinnaker as a code, any changes made through the ui will be overwritten. Template name: eo_pipeline_ofoc from the repository am-ci-flow in the directory spinnaker/ofoc_eo_flows/templates",
+    "schema": "1",
+    "spelEvaluator": "v4",
+    "parameterConfig": [
+        {
+            "name": "TRIGGER",
+            "default": "Manual Run",
+            "description": "",
+            "hasOptions": false,
+            "pinned": true,
+            "required": false
+        },
+        {
+            "name": "SUBMIT_TO_EO_STAGING",
+            "default": "true",
+            "description": "",
+            "hasOptions": true,
+            "options": [
+                { "value": "true" },
+                { "value": "false" }
+            ],
+            "pinned": true,
+            "required": true
+        },
+        {
+            "name": "SKIP_PRE_TESTING",
+            "default": "true",
+            "description": "",
+            "hasOptions": true,
+            "options": [
+                { "value": "true" },
+                { "value": "false" }
+            ],
+            "pinned": true,
+            "required": true
+        }
+    ],
+    "stages": [
+        {
+            "name": "Evaluate Chart Variables",
+            "refId": "Evaluate Chart Variables",
+            "requisiteStageRefIds": [],
+            "failOnFailedExpressions": true,
+            "type": "evaluateVariables",
+            "variables": [
+                {
+                    "key": "MICROSERVICE_CHART_NAME",
+                    "value": "${trigger['payload']['CHART_NAME']}"
+                },
+                {
+                    "key": "MICROSERVICE_CHART_VERSION",
+                    "value": "${trigger['payload']['CHART_VERSION']}"
+                },
+                {
+                    "key": "MICROSERVICE_CHART_REPO",
+                    "value": "${trigger['payload']['CHART_REPO']}"
+                }
+            ]
+        },
+        {
+            "name": "Evaluate Git Variables",
+            "refId": "Evaluate Git Variables",
+            "requisiteStageRefIds": [],
+            "failOnFailedExpressions": true,
+            "type": "evaluateVariables",
+            "variables": [
+                {
+                    "key": "GIT_COMMIT_AUTHOR",
+                    "value": "${trigger['payload']['GIT_COMMIT_AUTHOR']?: 'Commit info is missing in release job'}"
+                },
+                {
+                    "key": "GIT_COMMIT_AUTHOR_EMAIL",
+                    "value": "${trigger['payload']['GIT_COMMIT_AUTHOR_EMAIL']?: 'Commit info is missing in release job'}"
+                },
+                {
+                    "key": "GIT_COMMIT_SUMMARY",
+                    "value": "${trigger['payload']['GIT_COMMIT_SUMMARY']?: 'Commit info is missing in release job'}"
+                },
+                {
+                    "key": "GERRIT_CHANGE_URL",
+                    "value": "${trigger['payload']['GERRIT_CHANGE_URL']?: 'Commit info is missing in release job'}"
+                }
+            ]
+        },
+        {
+            "name": "OFOC_Application_Staging",
+            "refId": "OFOC_Application_Staging",
+            "requisiteStageRefIds": [
+                "Evaluate Chart Variables",
+                "Evaluate Git Variables"
+            ],
+            "completeOtherBranchesThenFail": true,
+            "continuePipeline": false,
+            "failPipeline": false,
+            "waitForCompletion": true,
+            "type": "pipeline",
+            "application": "oss-function-orchestration-common-e2e-cicd",
+            "pipeline": "b96f27b7-fe61-4006-bb69-32af134dfbc1",
+            "pipelineParameters": {
+                "CHART_NAME": "${MICROSERVICE_CHART_NAME}",
+                "CHART_REPO": "${MICROSERVICE_CHART_REPO}",
+                "CHART_VERSION": "${MICROSERVICE_CHART_VERSION}",
+                "GERRIT_CHANGE_URL": "${GERRIT_CHANGE_URL}",
+                "GIT_COMMIT_SUMMARY": "${GIT_COMMIT_SUMMARY}",
+                "SKIP_PRE_TESTING": "${parameters['SKIP_PRE_TESTING']}"
+            },
+            "stageEnabled": {
+                "expression": "${parameters['SUBMIT_TO_EO_STAGING']} == true",
+                "type": "expression"
+            }
+        },
+        {
+            "name": "EO_Product_Staging",
+            "refId": "EO_Product_Staging",
+            "requisiteStageRefIds": [
+                "OFOC_Application_Staging"
+            ],
+            "completeOtherBranchesThenFail": true,
+            "continuePipeline": false,
+            "failPipeline": false,
+            "waitForCompletion": true,
+            "type": "pipeline",
+            "application": "eoapp",
+            "pipeline": "fe9cb49d-cb50-4966-bcf5-2c51dd381399",
+            "pipelineParameters": {
+                "CHART_NAME": "${#stage('OFOC_Application_Staging')['context']['INT_CHART_NAME']}",
+                "CHART_REPO": "${#stage('OFOC_Application_Staging')['context']['INT_CHART_REPO']}",
+                "CHART_VERSION": "${#stage('OFOC_Application_Staging')['context']['INT_CHART_VERSION']}",
+                "MICROSERVICE_CHART_NAME": "${MICROSERVICE_CHART_NAME}",
+                "MICROSERVICE_CHART_REPO": "${MICROSERVICE_CHART_REPO}",
+                "MICROSERVICE_CHART_VERSION": "${MICROSERVICE_CHART_VERSION}"
+            },
+            "stageEnabled": {
+                "expression": "${trigger['parameters']['SUBMIT_TO_EO_STAGING']} == true",
+                "type": "expression"
+            }
+        }
+    ]
+}

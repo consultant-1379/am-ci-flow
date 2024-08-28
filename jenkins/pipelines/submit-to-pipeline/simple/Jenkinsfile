@@ -1,0 +1,93 @@
+#!/usr/bin/env groovy
+
+@Library('jenkins-shared-libs')
+import static Boolean.parseBoolean
+import static com.ericsson.orchestration.mgmt.libs.VnfmGerrit.listReviews
+import static com.ericsson.orchestration.mgmt.libs.VnfmGerrit.rebaseChange
+import static com.ericsson.orchestration.mgmt.libs.VnfmJenkins.getAgentLabel
+import static com.ericsson.orchestration.mgmt.libs.VnfmJenkins.getSeedJobName
+
+
+// Stages template
+def stages = [:]
+// Set Agent label
+String label = getAgentLabel( type: 'concurrent',
+                              this)
+
+
+node(label) {
+    try {
+        // Set Job's ENVs
+        env.SEED_JOB = getSeedJobName(JOB_NAME)
+        env.JOB_TYPE = 'pre-release'
+        env.GLOBAL_VAR_PATH = 'jenkins/global.var'
+        env.VAR_PATH = 'jenkins/' + env.SEED_JOB + '/project.var'
+        env.GERRIT_BRANCH = env.GERRIT_BRANCH
+        env.GERRIT_REFSPEC = env.GERRIT_REFSPEC
+        env.GERRIT_CHANGE_NUMBER = env.GERRIT_CHANGE_NUMBER
+        env.GERRIT_URL = env.GERRIT_CHANGE_URL ? env.GERRIT_CHANGE_URL.minus('/' + env.GERRIT_CHANGE_NUMBER) : ''
+        env.GERRIT_CHANGE_URL = env.GERRIT_CHANGE_URL
+        env.GERRIT_CHANGE_SUBJECT = params.GERRIT_CHANGE_SUBJECT
+
+
+        // Run Prepare Stage
+        stage('Prepare') {
+            println('INFO: Checkout CI code...')
+            checkout(scm)
+
+            println('INFO: Load Global vars...')
+            load(env.GLOBAL_VAR_PATH)
+
+            println('INFO: Load Project vars...')
+            load(env.VAR_PATH)
+
+            println('INFO: Load Stages...')
+            stages['git'] = load(env.GIT_STAGE)
+            stages['jobs'] = load(env.JOBS_STAGE)
+            stages['run-job'] = load(env.RUN_JOB_STAGE)
+            stages['clean'] = load(env.CLEAN_STAGE)
+
+            println('INFO: Check Verified label...')
+            Map reviews = listReviews(number: env.GERRIT_CHANGE_NUMBER,
+                                      url: env.GERRIT_URL,
+                                      this)
+            String message
+            switch(true) {
+                case '-1' in reviews['Verified']['value']:
+                    message = 'ERROR: Change has "-1" for "Verified" label'
+                    error(message: message)
+                break
+                case env.GERRIT_CHANGE_SUBJECT[0..7] != 'JENKINS-' && !('+1' in reviews['Verified']['value']):
+                    message = 'ERROR: Change has no "+1" for "Verified" label'
+                    error(message: message)
+                break
+            }
+
+            println('INFO: Rebase Change...')
+            env.GERRIT_REFSPEC = rebaseChange(number: env.GERRIT_CHANGE_NUMBER,
+                                              url: env.GERRIT_URL,
+                                              this)
+        }
+
+        // Run Submit stage
+        stages['git'].SubmitChange( number: env.GERRIT_CHANGE_NUMBER,
+                                    url: env.GERRIT_URL)
+
+        // Run Set Job Parameter Stage
+        stages['jobs'].SetJobParameter( name: 'RELEASE_PARAMS',
+                                        job: 'release',
+                                        stage: 'Set Release parameters')
+
+        // Run Release Job
+        stages['run-job'].LocalJob( name: env.SEED_JOB + '_release-flow',
+                                    params: evaluate(env.RELEASE_PARAMS),
+                                    stage: 'Release Job')
+
+    } catch (Exception errJob) {
+        println(errJob)
+        currentBuild.result = 'FAILURE'
+    } finally {
+        // Run Clean Stage
+        stages['clean'].CleanBuild()
+    }
+}
